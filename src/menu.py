@@ -80,6 +80,6 @@ def run(G, KEY_MAP=FALLBACK_KEY_MAP):
 
                     if (e.key == KEY_MAP[player]["START"]
                         and len(G["P1"]["CHARACTERS"] + G["P2"]["CHARACTERS"]) == 6):
-
+                        G["INMENU"] = False
                         return G
 
