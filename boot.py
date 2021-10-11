@@ -1,3 +1,5 @@
-from src.game import run
+from src.game import set_up, run
 
-run()
+if __name__ == "__main__":
+    G = set_up()
+    run(G)
