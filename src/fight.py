@@ -35,15 +35,29 @@ def draw_HUD(G, dest):
             pygame.draw.rect(dest, METER_IN_COLOR[i], Rect((W - (i + 1) * 64, 36), (64, 24)))
 
 
+def draw_fighter(dest, fighter):
+    sprite = fighter.get_sprite()
+    dest.blit(sprite, (fighter.X, fighter.Y))
+
 def run(G):
     # Remove this once loading characters is written
     G["P1"]["ACTIVE"] = Fighter(fighter_map[G["P1"]["CHARACTERS"].pop(0)])
     G["P2"]["ACTIVE"] = Fighter(fighter_map[G["P2"]["CHARACTERS"].pop(0)])
- 
+    
+    G["P1"]["ACTIVE"].X = 32
+    G["P1"]["ACTIVE"].Y = G["SCREEN"].get_height() - G["P1"]["ACTIVE"].H
+
+    G["P2"]["ACTIVE"].X = G["SCREEN"].get_width() - G["P2"]["ACTIVE"].W - 32
+    G["P2"]["ACTIVE"].Y = G["SCREEN"].get_height() - G["P2"]["ACTIVE"].H
+    G["P2"]["ACTIVE"].direction = -1
+    
     while True:
         G["SCREEN"].fill((200, 200, 250))
         draw_HUD(G, G["SCREEN"])
+        for fighter in (G["P1"]["ACTIVE"], G["P2"]["ACTIVE"]):
+            draw_fighter(G["SCREEN"], fighter)
         pygame.display.update()
+        
         for e in pygame.event.get():
             if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE:
                 quit()

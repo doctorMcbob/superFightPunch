@@ -11,24 +11,60 @@ fighter_map = {
     "SWORDIE": {
         "MAXHP": 100,
         "W": 128,
-        "H": 96,
-        "SPRITESHEET": {},
+        "H": 128,
+        "WALKSPEED": 5,
+        "DASHSPEED": 10,
+        "JUMPSTRENGTH": 15,
+        "ARIALSPEED": 8,
+        "DOUBLEJUMPSTRENGTH": 20,
+        "SPRITESHEET": {
+            "STAND": ((0, 0), (128, 128)),
+            "DASH": ((128, 0), (128, 128)),
+            "WALK": ((256, 0), (128, 128)),
+            "JUMPSQUAT": ((384, 0), (128, 128)),
+            "ARIAL": ((512, 0), (128, 128)),
+            "LAND": ((640, 0), (128, 128)),
+        },
         "SSFILENAME": "swordie.png",
         "MSFILENAME": "swordie.json"
     },
     "BRAWLER": {
         "MAXHP": 100,
         "W": 128,
-        "H": 96,
-        "SPRITESHEET": {},
+        "H": 128,
+        "WALKSPEED": 5,
+        "DASHSPEED": 10,
+        "JUMPSTRENGTH": 15,
+        "ARIALSPEED": 8,
+        "DOUBLEJUMPSTRENGTH": 20,
+        "SPRITESHEET": {
+            "STAND": ((0, 0), (128, 128)),
+            "DASH": ((128, 0), (128, 128)),
+            "WALK": ((256, 0), (128, 128)),
+            "JUMPSQUAT": ((384, 0), (128, 128)),
+            "ARIAL": ((512, 0), (128, 128)),
+            "LAND": ((640, 0), (128, 128)),
+        },
         "SSFILENAME": "brawler.png",
         "MSFILENAME": "brawler.json"
     },
     "SPEEDLE": {
         "MAXHP": 100,
-        "W": 96,
-        "H": 64,
-        "SPRITESHEET": {},
+        "W": 128,
+        "H": 128,
+        "WALKSPEED": 5,
+        "DASHSPEED": 10,
+        "JUMPSTRENGTH": 15,
+        "ARIALSPEED": 8,
+        "DOUBLEJUMPSTRENGTH": 20,
+        "SPRITESHEET": {
+            "STAND": ((0, 0), (128, 128)),
+            "DASH": ((128, 0), (128, 128)),
+            "WALK": ((256, 0), (128, 128)),
+            "JUMPSQUAT": ((384, 0), (128, 128)),
+            "ARIAL": ((512, 0), (128, 128)),
+            "LAND": ((640, 0), (128, 128)),
+        },
         "SSFILENAME": "speedle.png",
         "MSFILENAME": "speedle.json"
     }
@@ -41,6 +77,18 @@ class Fighter(object):
 
         self.W = template["W"]
         self.H = template["H"]
+
+        self.inp = {
+            "LEFT": 0,
+            "UP": 0,
+            "RIGHT": 0,
+            "DOWN": 0,
+
+            "BTN0": 0,
+            "BTN1": 0,
+            "BTN2": 0,
+            "BTN3": 0,
+        }
 
         self.X = 0
         self.Y = 0
@@ -72,14 +120,29 @@ class Fighter(object):
             }
 
         self.hitboxes = []
-        self.hitbox_data = {}
+        self.hitbox_data = []
         self.hurtboxes = []
 
+    def get_move_data(self):
+        if self.state in self.moves:
+            return self.moves[self.state]
+        x = self.frame
+        while x >= 0:
+            name = self.state + ":" + str(x)
+            if name in self.moves: return self.moves[name]
+            x -= 1
+        return []
+
     def update_boxes(self):
-        self.hitboxes = [Rect(hitbox["POS"], hitbox["DIM"]) for hitbox in self.moves[self.state][self.frame]["HITBOXES"]]
-        self.hitbox_data = [hitbox["DATA"] for hitbox in self.moves[self.state][self.frame]["HITBOXES"]]
-        self.hurtboxes = [Rect(hurtbox["POS"], hurtbox["DIM"]) for hurtbox in self.moves[self.state][self.frame]["HURTBOXES"]]
-                            
+        move_data = self.get_move_data()
+        self.hitboxes = []
+        self.hitbox_data = []
+        for hitbox in move_data["HITBOXES"]:
+            self.hitboxes.append(Rect(hitbox["RECT"][0], hitbox["RECT"][0]))
+            self.hitbox_data.append(hitbox)
+        self.hurtboxes = [Rect(hurtbox["RECT"][0], hurtbox["RECT"][1])
+                          for hurtbox in self.moves[self.state][self.frame]["HURTBOXES"]]
+
     def check_collision(self, enemy):
         priority_hitbox = {"PRIO": 100}
         for hurtbox in self.hurtboxes:
