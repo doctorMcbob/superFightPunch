@@ -109,27 +109,22 @@ class Fighter(object):
 
         try:
             with open("src/bin/"+template["MSFILENAME"]) as f:
-                self.moves = json.load(f)
+                self.data = json.load(f)
         except IOError:
             print("Missing file: " + template["MSFILENAME"])
-            self.moves = {
-                "STAND": {
-                    "HITBOXES": [],
-                    "HURTBOXES": []
-                }
-            }
+            quit()
 
         self.hitboxes = []
         self.hitbox_data = []
         self.hurtboxes = []
 
     def get_move_data(self):
-        if self.state in self.moves:
-            return self.moves[self.state]
+        if self.state in self.data:
+            return self.data[self.state]
         x = self.frame
         while x >= 0:
             name = self.state + ":" + str(x)
-            if name in self.moves: return self.moves[name]
+            if name in self.data: return self.data[name]
             x -= 1
         return []
 
@@ -141,7 +136,7 @@ class Fighter(object):
             self.hitboxes.append(Rect(hitbox["RECT"][0], hitbox["RECT"][0]))
             self.hitbox_data.append(hitbox)
         self.hurtboxes = [Rect(hurtbox["RECT"][0], hurtbox["RECT"][1])
-                          for hurtbox in self.moves[self.state][self.frame]["HURTBOXES"]]
+                          for hurtbox in self.data[self.state][self.frame]["HURTBOXES"]]
 
     def check_collision(self, enemy):
         priority_hitbox = {"PRIO": 100}

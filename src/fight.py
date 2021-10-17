@@ -3,6 +3,7 @@ from pygame import Rect
 from pygame.locals import *
 
 from src.fighter import Fighter, fighter_map
+from src.controller_handler import ControllerHandler, DEFAULT_KEY_MAP
 
 METER_IN_COLOR = [(110, 120, 200), (110, 200, 120), (110, 200, 200), (250,  80,  80)]
 METER_OU_COLOR = [( 80,  80, 140), ( 80, 140,  80), ( 80, 140, 140), (180,  20,  20)]
@@ -39,6 +40,7 @@ def draw_fighter(dest, fighter):
     sprite = fighter.get_sprite()
     dest.blit(sprite, (fighter.X, fighter.Y))
 
+
 def run(G):
     # Remove this once loading characters is written
     G["P1"]["ACTIVE"] = Fighter(fighter_map[G["P1"]["CHARACTERS"].pop(0)])
@@ -50,14 +52,16 @@ def run(G):
     G["P2"]["ACTIVE"].X = G["SCREEN"].get_width() - G["P2"]["ACTIVE"].W - 32
     G["P2"]["ACTIVE"].Y = G["SCREEN"].get_height() - G["P2"]["ACTIVE"].H
     G["P2"]["ACTIVE"].direction = -1
-    
+
+    controller_handler = ControllerHandler()
+    controller_handler.add_player(G["P1"]["ACTIVE"], DEFAULT_KEY_MAP["P1"])
+    controller_handler.add_player(G["P2"]["ACTIVE"], DEFAULT_KEY_MAP["P2"])
+
     while True:
         G["SCREEN"].fill((200, 200, 250))
         draw_HUD(G, G["SCREEN"])
         for fighter in (G["P1"]["ACTIVE"], G["P2"]["ACTIVE"]):
             draw_fighter(G["SCREEN"], fighter)
         pygame.display.update()
-        
-        for e in pygame.event.get():
-            if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE:
-                quit()
+        controller_handler.update()
+
