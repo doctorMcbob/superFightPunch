@@ -40,6 +40,7 @@ def draw_fighter(dest, fighter):
     sprite = fighter.get_sprite()
     dest.blit(sprite, (fighter.X, fighter.Y))
 
+
 def run(G):
     G["CONTROLLER"] = ControllerHandler()
     
@@ -56,10 +57,11 @@ def run(G):
     G["P2"]["ACTIVE"].X = G["SCREEN"].get_width() - G["P2"]["ACTIVE"].W - 32
     G["P2"]["ACTIVE"].Y = G["SCREEN"].get_height() - G["P2"]["ACTIVE"].H
     G["P2"]["ACTIVE"].direction = -1
-    
+
     while True:
         G["SCREEN"].fill((200, 200, 250))
         draw_HUD(G, G["SCREEN"])
+        if G["DEBUG"]: G["CLEAR"]()
         for fighter in (G["P1"]["ACTIVE"], G["P2"]["ACTIVE"]):
             fighter.update()
             draw_fighter(G["SCREEN"], fighter)
@@ -70,3 +72,4 @@ def run(G):
         pygame.display.update()
 
         G["CONTROLLER"].update()
+

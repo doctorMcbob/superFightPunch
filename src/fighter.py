@@ -14,10 +14,12 @@ fighter_map = {
         "H": 128,
         "WALKSPEED": 5,
         "DASHSPEED": 10,
-        "JUMPSTRENGTH": 16,
-        "SHORTHOPTRENGTH": 8,
+        "JUMPSTRENGTH": -16,
+        "SHORTHOPTRENGTH": -8,
         "ARIALSPEED": 8,
         "DOUBLEJUMPSTRENGTH": 20,
+        "GRAV": 1,
+        "FLOAT": 8,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
             "DASH": ((128, 0), (128, 128)),
@@ -35,10 +37,12 @@ fighter_map = {
         "H": 128,
         "WALKSPEED": 5,
         "DASHSPEED": 10,
-        "JUMPSTRENGTH": 16,
-        "SHORTHOPTRENGTH": 8,
+        "JUMPSTRENGTH": -16,
+        "SHORTHOPTRENGTH": -8,
         "ARIALSPEED": 8,
         "DOUBLEJUMPSTRENGTH": 20,
+        "GRAV": 1,
+        "FLOAT": 8,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
             "DASH": ((128, 0), (128, 128)),
@@ -56,10 +60,12 @@ fighter_map = {
         "H": 128,
         "WALKSPEED": 5,
         "DASHSPEED": 10,
-        "JUMPSTRENGTH": 16,
-        "SHORTHOPTRENGTH": 8,
+        "JUMPSTRENGTH": -16,
+        "SHORTHOPTRENGTH": -8,
         "ARIALSPEED": 8,
         "DOUBLEJUMPSTRENGTH": 20,
+        "GRAV": 1,
+        "FLOAT": 8,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
             "DASH": ((128, 0), (128, 128)),
@@ -88,7 +94,11 @@ class Fighter(object):
         self.jump_strength = template["JUMPSTRENGTH"]
         self.short_hop_strength = template["SHORTHOPTRENGTH"]
         self.double_jump_strength = template["DOUBLEJUMPSTRENGTH"]
+        self.has_double_jump = True
         
+        self.grav = template["GRAV"]
+        self.floaty = template["FLOAT"]
+
         self.inp = {
             "LEFT": 0,
             "UP": 0,
@@ -120,21 +130,22 @@ class Fighter(object):
 
         try:
             with open("src/bin/"+template["MSFILENAME"]) as f:
-                self.moves = json.load(f)
+                self.data = json.load(f)
         except IOError:
             print("Missing file: " + template["MSFILENAME"])
             quit()
+
         self.hitboxes = []
         self.hitbox_data = []
         self.hurtboxes = []
 
     def get_move_data(self):
-        if self.state in self.moves:
-            return self.moves[self.state]
+        if self.state in self.data:
+            return self.data[self.state]
         x = self.frame
         while x >= 0:
             name = self.state + ":" + str(x)
-            if name in self.moves: return self.moves[name]
+            if name in self.data: return self.data[name]
             x -= 1
         return []
 
@@ -183,14 +194,16 @@ class Fighter(object):
         state = self.state
         if self.inp["BTN3"] and "DASH" in move_data["ACTIONABLE"] and (self.inp["LEFT"] or self.inp["RIGHT"]):
                 self.state = "DASH"
-                print("enter dash")
         elif not self.inp["BTN3"] and "WALK" in move_data["ACTIONABLE"] and (self.inp["LEFT"] or self.inp["RIGHT"]):
                 self.state = "WALK"
-                print("enter walk")
+
         elif self.inp["BTN2"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
             self.state = "JUMPSQUAT"
-        elif self.inp["BTN2"] and "DOUBLEJUMP" in move_data["ACTIONABLE"]:
+        elif self.inp["BTN2"] and "DOUBLEJUMP" in move_data["ACTIONABLE"] and self.has_double_jump:
             self.state = "DOUBLEJUMP"
+
+        elif self.state == "JUMPSQUAT" and "JUMP" in move_data["ACTIONABLE"]:
+            self.state = "JUMP"
 
         elif self.inp["BTN0"] and "GROUNDATK0" in move_data["ACTIONABLE"]:
             self.state = "GROUNDATK0"
@@ -223,9 +236,12 @@ class Fighter(object):
         if self.frame == 0:
             if self.state == "JUMP":
                 self.Y_VEL = self.jump_strength
+                self.state = "ARIAL"
             if self.state == "DOUBLEJUMP":
                 self.X_VEL = self.double_jump_strength * d[0]
                 self.Y_VEL = self.double_jump_strength * d[1]
+                self.has_double_jump = False
+                self.state = "ARIAL"
 
         if self.state == "STAND":
             self.X_VEL = 0
@@ -234,8 +250,16 @@ class Fighter(object):
             self.X_VEL = self.walk_speed * d[0]
         elif self.state == "DASH":
             self.X_VEL = self.dash_speed * d[0]
-            
-            
+
+        elif self.state == "ARIAL":
+            pass
+            if abs(self.Y_VEL + self.grav) <= self.floaty:
+                self.Y_VEL += self.grav
+            elif self.Y_VEL > 0:
+                self.Y_VEL =  0 - self.floaty
+            elif self.Y_VEL < 0:
+                self.Y_VEL = self.floaty
+
     def update(self):
         self.update_state()
         self.apply_state()
@@ -252,4 +276,14 @@ class Fighter(object):
         print(self.state, self.frame)
         print("input")
         for key in self.inp:
-            print(key, self.inp[key])
+            print("    ", key, self.inp[key])
+        print("move data")
+        move_data = self.get_move_data()
+        for key in move_data:
+            print("    ", key, move_data[key])
+        print("fighter data")
+        print("    ", "X", self.X)
+        print("    ", "Y", self.Y)
+        print("    ", "X_VEL", self.X_VEL)
+        print("    ", "Y_VEL", self.Y_VEL)
+        print("    ", "DJ", self.has_double_jump)

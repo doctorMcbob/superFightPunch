@@ -9,6 +9,9 @@ from pygame.locals import *
 pygame.init()
 
 import sys
+import os
+
+def clear(): os.system("cls || clear")
 
 W, H = 800, 640
 
@@ -20,6 +23,7 @@ def set_up():
         G["SCREEN"] = pygame.display.set_mode((W, H))
 
     G["DEBUG"] = "-d" in sys.argv
+    G["CLEAR"] = clear
     
     G["W"], G["H"] = W, H    
     G["HEL16"] = pygame.font.SysFont("Helvetica", 16)
