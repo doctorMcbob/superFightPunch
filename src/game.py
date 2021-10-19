@@ -18,6 +18,9 @@ def set_up():
         G["SCREEN"] = pygame.display.set_mode((W, H), FULLSCREEN)
     else:
         G["SCREEN"] = pygame.display.set_mode((W, H))
+
+    G["DEBUG"] = "-d" in sys.argv
+    
     G["W"], G["H"] = W, H    
     G["HEL16"] = pygame.font.SysFont("Helvetica", 16)
     G["HEL32"] = pygame.font.SysFont("Helvetica", 32)

@@ -13,7 +13,7 @@ DEFAULT_KEY_MAP = {
         "BTN3": K_k,
     },
     "P2" : {
-        "LEFT": K_A,
+        "LEFT": K_a,
         "UP": K_w,
         "RIGHT": K_d,
         "DOWN": K_s,
@@ -46,7 +46,7 @@ class ControllerHandler(object):
         keys = pygame.key.get_pressed()
         if keys[self.QUITKEY]: quit()
         
-        for P in [self.P1, self.P2, self.P3, self.P4]:
+        for P in [self.P1, self.P2]:
             if P is None: continue
             player = P["player"]
             if P["type"] == "key":

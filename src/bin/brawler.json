@@ -1,1 +1,1 @@
-{"STAND": {"HITBOXES": [], "HURTBOXES": []}, "WALK": {"HITBOXES": [], "HURTBOXES": []}}
+{"STAND": {"ACTIONABLE": ["WALK", "DASH"], "HITBOXES": [], "HURTBOXES": []}, "WALK": {"ACTIONABLE": ["STAND", "DASH"], "HITBOXES": [], "HURTBOXES": []}, "DASH": {"ACTIONABLE": ["STAND", "WALK"], "HITBOXES": [], "HURTBOXES": []}}
