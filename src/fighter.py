@@ -97,7 +97,6 @@ class Fighter(object):
         self.has_double_jump = True
         
         self.grav = template["GRAV"]
-        self.floaty = template["FLOAT"]
 
         self.inp = {
             "LEFT": 0,
@@ -252,12 +251,7 @@ class Fighter(object):
             self.X_VEL = self.dash_speed * d[0]
 
         elif self.state == "ARIAL":
-            if abs(self.Y_VEL + self.grav) <= self.floaty:
-                self.Y_VEL += self.grav
-            elif self.Y_VEL > 0:
-                self.Y_VEL =  0 - self.floaty
-            elif self.Y_VEL < 0:
-                self.Y_VEL = self.floaty
+            self.Y_VEL += self.grav
 
     def update(self):
         self.update_state()
@@ -275,6 +269,10 @@ class Fighter(object):
         G["SCREEN"].blit(G["HEL16"].render("STATE:{}".format(self.state), 0, (80, 0, 0)), (x, y))
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("FRAME:{}".format(self.frame), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("POSITION: ({}, {})".format(self.X, self.Y), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("X VEL:{} Y VEL: {}".format(self.X_VEL, self.Y_VEL), 0, (80, 0, 0)), (x, y))
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("--INPUTS--", 0, (80, 0, 0)), (x, y))
         y += 16
