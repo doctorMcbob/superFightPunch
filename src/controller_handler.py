@@ -44,7 +44,7 @@ class ControllerHandler(object):
     def update(self):
         pygame.event.pump()
         keys = pygame.key.get_pressed()
-        if keys[self.QUITKEY]: quit()
+        if keys[self.QUITKEY] or pygame.event.peek(QUIT): quit()
         
         for P in [self.P1, self.P2]:
             if P is None: continue

@@ -22,8 +22,12 @@ def set_up():
     else:
         G["SCREEN"] = pygame.display.set_mode((W, H))
 
+    pygame.display.set_caption("༼ つ ◕_◕ ༽つ Super Fight Punch ༼ つ ◕_◕ ༽つ")
     G["DEBUG"] = "-d" in sys.argv
     G["CLEAR"] = clear
+
+    G["CLOCK"] = pygame.time.Clock()
+    G["FPS"] = 60 if "-fps" not in sys.argv else sys.argv[sys.argv.index("-fps") + 1]
     
     G["W"], G["H"] = W, H    
     G["HEL16"] = pygame.font.SysFont("Helvetica", 16)

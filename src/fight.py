@@ -59,7 +59,10 @@ def run(G):
     G["P2"]["ACTIVE"].direction = -1
 
     while True:
+        G["CLOCK"].tick(G["FPS"])
         G["SCREEN"].fill((200, 200, 250))
+        G["SCREEN"].blit(G["HEL16"].render(str(int(G["CLOCK"].get_fps())), 0, (0, 0, 0)), (G["W"] - 32, G["H"] - 32))
+
         draw_HUD(G, G["SCREEN"])
         if G["DEBUG"]: G["CLEAR"]()
         for fighter in (G["P1"]["ACTIVE"], G["P2"]["ACTIVE"]):

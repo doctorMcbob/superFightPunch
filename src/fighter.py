@@ -252,7 +252,6 @@ class Fighter(object):
             self.X_VEL = self.dash_speed * d[0]
 
         elif self.state == "ARIAL":
-            pass
             if abs(self.Y_VEL + self.grav) <= self.floaty:
                 self.Y_VEL += self.grav
             elif self.Y_VEL > 0:
