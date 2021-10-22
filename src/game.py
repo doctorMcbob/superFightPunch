@@ -23,7 +23,7 @@ def set_up():
     G["DEBUG"] = "-d" in sys.argv
 
     G["CLOCK"] = pygame.time.Clock()
-    G["FPS"] = 60 if "-fps" not in sys.argv else sys.argv[sys.argv.index("-fps") + 1]
+    G["FPS"] = 60 if "-fps" not in sys.argv else int(sys.argv[sys.argv.index("-fps") + 1])
     
     G["W"], G["H"] = W, H
     G["HEL8"] = pygame.font.SysFont("Helvetica", 8)
