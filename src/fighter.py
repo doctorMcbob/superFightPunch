@@ -270,19 +270,17 @@ class Fighter(object):
 
         self.frame += 1
 
-    def DEBUG(self):
-        print("-------")
-        print(self.state, self.frame)
-        print("input")
-        for key in self.inp:
-            print("    ", key, self.inp[key])
-        print("move data")
-        move_data = self.get_move_data()
-        for key in move_data:
-            print("    ", key, move_data[key])
-        print("fighter data")
-        print("    ", "X", self.X)
-        print("    ", "Y", self.Y)
-        print("    ", "X_VEL", self.X_VEL)
-        print("    ", "Y_VEL", self.Y_VEL)
-        print("    ", "DJ", self.has_double_jump)
+    def DEBUG(self, G):
+        x, y = self.X + self.W, self.Y - 64
+        G["SCREEN"].blit(G["HEL16"].render("STATE:{}".format(self.state), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("FRAME:{}".format(self.frame), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("--INPUTS--", 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("L:{LEFT} U:{UP} R:{RIGHT} D:{DOWN}".format(**self.inp), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("A:{BTN0} B:{BTN1} X:{BTN2} Y:{BTN3}".format(**self.inp), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("HITSTUN: {}".format(self.hitstun), 0, (80, 0, 0)), (x, y))
+        

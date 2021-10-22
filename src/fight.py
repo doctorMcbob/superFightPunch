@@ -64,13 +64,12 @@ def run(G):
         G["SCREEN"].blit(G["HEL16"].render(str(int(G["CLOCK"].get_fps())), 0, (0, 0, 0)), (G["W"] - 32, G["H"] - 32))
 
         draw_HUD(G, G["SCREEN"])
-        if G["DEBUG"]: G["CLEAR"]()
         for fighter in (G["P1"]["ACTIVE"], G["P2"]["ACTIVE"]):
             fighter.update()
             draw_fighter(G["SCREEN"], fighter)
 
             if G["DEBUG"]:
-                fighter.DEBUG()
+                fighter.DEBUG(G)
 
         pygame.display.update()
 

@@ -9,9 +9,6 @@ from pygame.locals import *
 pygame.init()
 
 import sys
-import os
-
-def clear(): os.system("cls || clear")
 
 W, H = 800, 640
 
@@ -24,12 +21,12 @@ def set_up():
 
     pygame.display.set_caption("༼ つ ◕_◕ ༽つ Super Fight Punch ༼ つ ◕_◕ ༽つ")
     G["DEBUG"] = "-d" in sys.argv
-    G["CLEAR"] = clear
 
     G["CLOCK"] = pygame.time.Clock()
     G["FPS"] = 60 if "-fps" not in sys.argv else sys.argv[sys.argv.index("-fps") + 1]
     
-    G["W"], G["H"] = W, H    
+    G["W"], G["H"] = W, H
+    G["HEL8"] = pygame.font.SysFont("Helvetica", 8)
     G["HEL16"] = pygame.font.SysFont("Helvetica", 16)
     G["HEL32"] = pygame.font.SysFont("Helvetica", 32)
     G["INMENU"] = True
