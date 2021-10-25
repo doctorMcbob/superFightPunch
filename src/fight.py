@@ -42,12 +42,16 @@ def draw_fighter(dest, fighter):
     dest.blit(sprite, (fighter.X, fighter.Y))
 
 
-def run(G):
+def draw_stage(dest, stage):
+    for rect in stage["PLAT"]:
+        pygame.draw.rect(dest, (80, 80, 80), rect)
+
+def run(G, stage="airplane"):
     # re do all this once the moving pieces are finished
     # ie: fighters and stages
     G["CONTROLLER"] = ControllerHandler()
     
-    get_stage(G["STAGENAME"])
+    get_stage(G, stage)
     # Remove this once loading characters is written
     G["P1"]["ACTIVE"] = Fighter(fighter_map[G["P1"]["CHARACTERS"].pop(0)])
     G["P2"]["ACTIVE"] = Fighter(fighter_map[G["P2"]["CHARACTERS"].pop(0)])
@@ -65,6 +69,8 @@ def run(G):
     while True:
         G["CLOCK"].tick(G["FPS"])
         G["SCREEN"].fill((200, 200, 250))
+        draw_stage(G["SCREEN"], G["STAGE"])
+
         G["SCREEN"].blit(G["HEL16"].render(str(int(G["CLOCK"].get_fps())), 0, (0, 0, 0)), (G["W"] - 32, G["H"] - 32))
 
         draw_HUD(G, G["SCREEN"])
