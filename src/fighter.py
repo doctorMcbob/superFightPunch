@@ -1,7 +1,5 @@
-import json
-
 import pygame
-from pygame import Surface
+from pygame import Surface, Rect
 
 from src.sprites import load_spritesheet
 
@@ -29,7 +27,7 @@ fighter_map = {
             "LAND": ((640, 0), (128, 128)),
         },
         "SSFILENAME": "swordie.png",
-        "MSFILENAME": "swordie.json"
+        "MSFILENAME": "swordie"
     },
     "BRAWLER": {
         "MAXHP": 100,
@@ -52,7 +50,7 @@ fighter_map = {
             "LAND": ((640, 0), (128, 128)),
         },
         "SSFILENAME": "brawler.png",
-        "MSFILENAME": "brawler.json"
+        "MSFILENAME": "brawler"
     },
     "SPEEDLE": {
         "MAXHP": 100,
@@ -75,7 +73,7 @@ fighter_map = {
             "LAND": ((640, 0), (128, 128)),
         },
         "SSFILENAME": "speedle.png",
-        "MSFILENAME": "speedle.json"
+        "MSFILENAME": "speedle"
     }
 }
 
@@ -129,7 +127,7 @@ class Fighter(object):
 
         try:
             with open("src/bin/"+template["MSFILENAME"]) as f:
-                self.data = json.load(f)
+                self.data = eval(f.read())
         except IOError:
             print("Missing file: " + template["MSFILENAME"])
             quit()
@@ -137,6 +135,9 @@ class Fighter(object):
         self.hitboxes = []
         self.hitbox_data = []
         self.hurtboxes = []
+        self.ECB = None
+
+        self.update_boxes()
 
     def get_move_data(self):
         if self.state in self.data:
@@ -157,9 +158,11 @@ class Fighter(object):
             self.hitbox_data.append(hitbox)
         self.hurtboxes = [Rect(hurtbox["RECT"][0] + self.X, hurtbox["RECT"][1] + self.Y)
                           for hurtbox in move_data["HURTBOXES"]]
+        self.ECB = [Rect(ecb["RECT"][0] + self.X, ecb["RECT"][1] + self.Y)
+                          for ecb in move_data["ECB"]]
 
     def check_collision(self, enemy):
-        priority_hitbox = {"PRIO": 100}
+        priority_hitbox = {"PRIO": 100, "HITSTUN": 0, "HITLAG": 0}
         for hurtbox in self.hurtboxes:
             for hitbox in hurtbox.collidelistall(enemy.hitboxes):
                 data = enemy.hitbox_data[enemy.hitboxes.index(hitbox)]
@@ -185,40 +188,46 @@ class Fighter(object):
         # if the sprite was not found, return a placeholder
         surf = Surface((self.W, self.H))
         surf.fill((1, 255, 1))
-        surf.blit(HEL16.render(STATE, 0, (0, 0, 0)), (0, 0))
+        surf.blit(HEL16.render(self.state, 0, (0, 0, 0)), (0, 0))
         return surf
         
     def update_state(self):
         move_data = self.get_move_data()
         state = self.state
+
+        # DASH FUNCTIONALITY
         if self.inp["BTN3"] and "DASH" in move_data["ACTIONABLE"] and (self.inp["LEFT"] or self.inp["RIGHT"]):
                 self.state = "DASH"
         elif not self.inp["BTN3"] and "WALK" in move_data["ACTIONABLE"] and (self.inp["LEFT"] or self.inp["RIGHT"]):
                 self.state = "WALK"
 
+        # JUMP FUNCTIONALITY
         elif self.inp["BTN2"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
             self.state = "JUMPSQUAT"
         elif self.inp["BTN2"] and "DOUBLEJUMP" in move_data["ACTIONABLE"] and self.has_double_jump:
             self.state = "DOUBLEJUMP"
-
         elif self.state == "JUMPSQUAT" and "JUMP" in move_data["ACTIONABLE"]:
             self.state = "JUMP"
 
+        # GROUNDED ATTACK FUNCTIONALITY
         elif self.inp["BTN0"] and "GROUNDATK0" in move_data["ACTIONABLE"]:
             self.state = "GROUNDATK0"
         elif self.inp["BTN1"] and "GROUNDATK1" in move_data["ACTIONABLE"]:
             self.state = "GROUNDATK1"
 
+        # ARIAL ATTACK FUNCTIONALITY
         elif self.inp["BTN0"] and "ARIALATK0" in move_data["ACTIONABLE"]:
             self.state = "ARIALATK0"
         elif self.inp["BTN1"] and "ARIALATK1" in move_data["ACTIONABLE"]:
             self.state = "ARIALATK1"
 
+        # DASH ATTACK FUNCTIONALITY
         elif self.inp["BTN0"] and "DASHATK0" in move_data["ACTIONABLE"]:
             self.state = "DASHATK0"
         elif self.inp["BTN1"] and "DASHATK1" in move_data["ACTIONABLE"]:
             self.state = "DASHATK1"
 
+        # DEFAULT BACK TO STAND
         elif "STAND" in move_data["ACTIONABLE"]:
             self.state = "STAND"
 
@@ -253,7 +262,10 @@ class Fighter(object):
         elif self.state == "ARIAL":
             self.Y_VEL += self.grav
 
-    def update(self):
+    def update(self, G):
+        opponent = G["P2"]["ACTIVE"] if G["P1"]["ACTIVE"] is self else G["P1"]["ACTIVE"]
+        self.check_collision(opponent)
+
         self.update_state()
         self.apply_state()
 

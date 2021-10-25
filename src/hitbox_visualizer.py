@@ -1,5 +1,3 @@
-import json
-
 import pygame
 from pygame import Surface
 from pygame.locals import *
@@ -67,17 +65,17 @@ def load_moves(filename):
     SAVED = True
     try:
         with open("src/bin/"+filename) as f:
-            return json.load(f)
+            return eval(f.read())
 
     except IOError:
-        return json.loads('{}')
+        return {}
 
 def save_moves(moves, filename):
     global SAVED
     SAVED = True
     try:
         with open("src/bin/"+filename, "w") as f:
-            json.dump(moves, f)
+            f.write(repr(moves))
         return "Saved: "+filename
     except IOError:
         return "Failed to save: "+filename
@@ -89,7 +87,7 @@ def run(G):
         if "CHARACTER" not in G:
             G["SCREEN"].blit(G["HEL32"].render("CHARACTER NAME:", 0, (0, 0, 0)), (0, 0))
             G["CHARACTER"] = get_text_input(G, (64, 64))
-            MOVES = load_moves(G["CHARACTER"]+".json")
+            MOVES = load_moves(G["CHARACTER"])
 
         if SHOW_LOG:
             G["SCREEN"].blit(LOG, (G["W"] - 256, 0))
@@ -105,5 +103,5 @@ def run(G):
             SHOW_LOG = not SHOW_LOG
 
         if inp == K_s and mods & KMOD_SHIFT:
-            log(G, save_moves(MOVES, G["CHARACTER"]+".json"))
+            log(G, save_moves(MOVES, G["CHARACTER"]))
 

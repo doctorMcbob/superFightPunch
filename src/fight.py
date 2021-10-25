@@ -4,6 +4,7 @@ from pygame.locals import *
 
 from src.fighter import Fighter, fighter_map
 from src.controller_handler import ControllerHandler, DEFAULT_KEY_MAP
+from src.stage import get_stage
 
 METER_IN_COLOR = [(110, 120, 200), (110, 200, 120), (110, 200, 200), (250,  80,  80)]
 METER_OU_COLOR = [( 80,  80, 140), ( 80, 140,  80), ( 80, 140, 140), (180,  20,  20)]
@@ -42,8 +43,11 @@ def draw_fighter(dest, fighter):
 
 
 def run(G):
+    # re do all this once the moving pieces are finished
+    # ie: fighters and stages
     G["CONTROLLER"] = ControllerHandler()
     
+    get_stage(G["STAGENAME"])
     # Remove this once loading characters is written
     G["P1"]["ACTIVE"] = Fighter(fighter_map[G["P1"]["CHARACTERS"].pop(0)])
     G["P2"]["ACTIVE"] = Fighter(fighter_map[G["P2"]["CHARACTERS"].pop(0)])
@@ -65,7 +69,7 @@ def run(G):
 
         draw_HUD(G, G["SCREEN"])
         for fighter in (G["P1"]["ACTIVE"], G["P2"]["ACTIVE"]):
-            fighter.update()
+            fighter.update(G)
             draw_fighter(G["SCREEN"], fighter)
 
             if G["DEBUG"]:

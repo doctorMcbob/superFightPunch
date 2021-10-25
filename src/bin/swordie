@@ -2,41 +2,49 @@
     "STAND": {
 	"ACTIONABLE": ["WALK", "DASH", "JUMPSQUAT"],
 	"HITBOXES": [],
-	"HURTBOXES": []
+	"HURTBOXES": [],
+	"ECB": []
     },
     "WALK": {
 	"ACTIONABLE": ["STAND", "DASH", "WALK", "JUMPSQUAT"],
 	"HITBOXES": [],
-	"HURTBOXES": []
+	"HURTBOXES": [],
+	"ECB": []
     },
     "DASH:0": {
 	"ACTIONABLE": ["DASH", "JUMPSQUAT"],
 	"HITBOXES": [],
-	"HURTBOXES": []
+	"HURTBOXES": [],
+	"ECB": []
     },
     "DASH:10": {
 	"ACTIONABLE": ["WALK", "STAND", "JUMPSQUAT"],
 	"HITBOXES": [],
-	"HURTBOXES": []
+	"HURTBOXES": [],
+	"ECB": []
     },
     "JUMPSQUAT:0": {
 	"ACTIONABLE": [],
 	"HITBOXES": [],
-	"HURTBOXES": []
+	"HURTBOXES": [],
+	"ECB": []
     },
     "JUMPSQUAT:4": {
 	"ACTIONABLE": ["JUMP"],
 	"HITBOXES": [],
-	"HURTBOXES": []
+	"HURTBOXES": [],
+	"ECB": []
     },
     "ARIAL:0": {
 	"ACTIONABLE": [],
 	"HITBOXES": [],
-	"HURTBOXES": []
+	"HURTBOXES": [],
+	"ECB": []
     },
     "ARIAL:15": {
 	"ACTIONABLE": ["DOUBLEJUMP"],
 	"HITBOXES": [],
-	"HURTBOXES": []
+	"HURTBOXES": [],
+	"ECB": []
     }
 }
