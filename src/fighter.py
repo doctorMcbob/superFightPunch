@@ -10,16 +10,16 @@ fighter_map = {
         "MAXHP": 100,
         "W": 128,
         "H": 128,
-        "WALKSPEED": 5,
-        "DASHSPEED": 10,
+        "WALKSPEED": 4,
+        "DASHSPEED": 8,
         "JUMPSTRENGTH": -16,
         "SHORTHOPTRENGTH": -8,
         "ARIALSPEED": 8,
         "BASELANDINGLAG": 3,
-        "DOUBLEJUMPSTRENGTH": 20,
+        "DOUBLEJUMPSTRENGTH": 16,
         "GRAV": 1,
         "FLOAT": 8,
-        "TRACTION": 0.8,
+        "TRACTION": 0.9,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
             "DASH": ((128, 0), (128, 128)),
@@ -35,16 +35,16 @@ fighter_map = {
         "MAXHP": 100,
         "W": 128,
         "H": 128,
-        "WALKSPEED": 5,
+        "WALKSPEED": 3,
         "DASHSPEED": 10,
         "JUMPSTRENGTH": -16,
         "SHORTHOPTRENGTH": -8,
         "ARIALSPEED": 8,
         "BASELANDINGLAG": 3,
-        "DOUBLEJUMPSTRENGTH": 20,
+        "DOUBLEJUMPSTRENGTH": 16,
         "GRAV": 1,
         "FLOAT": 8,
-        "TRACTION": 0.8,
+        "TRACTION": 0.6,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
             "DASH": ((128, 0), (128, 128)),
@@ -93,7 +93,7 @@ class Fighter(object):
 
         self.walk_speed = template["WALKSPEED"]
         self.dash_speed = template["DASHSPEED"]
-        self.arial_speed = template["ARIALSPEED"]
+        self.dash = None
 
         self.jump_strength = template["JUMPSTRENGTH"]
         self.short_hop_strength = template["SHORTHOPTRENGTH"]
@@ -234,8 +234,12 @@ class Fighter(object):
             self.state = "JUMP"
 
         # DASH FUNCTIONALITY
-        elif self.inp["BTN3"] and "DASH" in move_data["ACTIONABLE"] and (self.inp["LEFT"] or self.inp["RIGHT"]):
+        elif self.inp["BTN3"] and self.dash is None and "DASH" in move_data["ACTIONABLE"] and (self.inp["LEFT"] != self.inp["RIGHT"]):
                 self.state = "DASH"
+        elif self.dash is not None:
+            if not self.inp["BTN3"]:
+                self.dash = None
+                self.state = "STAND"
         elif not self.inp["BTN3"] and "WALK" in move_data["ACTIONABLE"] and (self.inp["LEFT"] or self.inp["RIGHT"]):
                 self.state = "WALK"
 
@@ -275,7 +279,7 @@ class Fighter(object):
         
     def apply_state(self):
         d = self._dir_as_tuple()
-        if self.state in ["STAND", "WALK", "DASH"]:
+        if self.state in ["STAND", "WALK"]:
             self.direction = d[0] if d[0] else self.direction
 
         if self.frame == 0:
@@ -291,19 +295,25 @@ class Fighter(object):
                     self.Y_VEL *= 0.7
                 self.has_double_jump = False
                 self.state = "ARIAL"
+            if self.state == "DASH":
+                self.dash = self.direction
         
         if self.state == "ARIAL" and not self.inp["BTN2"]:
             self.can_double_jump = True
 
-        if self.state in ["STAND"]:
+        if self.state in ["STAND", "WALK", "DASH"]:
             self.X_VEL *= self.traction if abs(self.X_VEL) > 1 else 0
         if self.state in ["STAND", "LANDING", "LANDINGLAG"]:
             self.Y_VEL = 0
         
         if self.state == "WALK":
-            self.X_VEL = self.walk_speed * d[0] if self.walk_speed > abs(self.X_VEL) else self.X_VEL
+            if not abs(self.X_VEL) > self.walk_speed:
+                self.X_VEL = self.walk_speed * d[0]
+
         if self.state == "DASH":
-            self.X_VEL = self.dash_speed * d[0] if self.dash_speed > abs(self.X_VEL) else self.X_VEL
+            self.X_VEL = self.dash_speed * self.dash
+        else:
+            self.dash = None
 
         if self.state == "ARIAL":
             self.Y_VEL += self.grav

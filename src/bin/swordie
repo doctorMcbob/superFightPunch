@@ -18,7 +18,7 @@
 		"ECB": [((0, 0), (128, 128))]
     },
     "DASH:10": {
-		"ACTIONABLE": ["WALK", "STAND", "JUMPSQUAT"],
+		"ACTIONABLE": ["STAND", "JUMPSQUAT"],
 		"HITBOXES": [],
 		"HURTBOXES": [],
 		"ECB": [((0, 0), (128, 128))]
@@ -41,7 +41,7 @@
 		"HURTBOXES": [],
 		"ECB": [((0, 0), (128, 128))]
     },
-	"ARIAL:2": {
+	"ARIAL:4": {
 		"ACTIONABLE": ["DOUBLEJUMP"],
 		"HITBOXES": [],
 		"HURTBOXES": [],

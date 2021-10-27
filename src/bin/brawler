@@ -12,13 +12,13 @@
 		"ECB": [((0, 0), (128, 128))]
     },
     "DASH:0": {
-		"ACTIONABLE": ["DASH", "JUMPSQUAT"],
+		"ACTIONABLE": ["JUMPSQUAT"],
 		"HITBOXES": [],
 		"HURTBOXES": [],
 		"ECB": [((0, 0), (128, 128))]
     },
     "DASH:10": {
-		"ACTIONABLE": ["WALK", "STAND", "JUMPSQUAT"],
+		"ACTIONABLE": ["STAND", "JUMPSQUAT"],
 		"HITBOXES": [],
 		"HURTBOXES": [],
 		"ECB": [((0, 0), (128, 128))]
@@ -41,7 +41,7 @@
 		"HURTBOXES": [],
 		"ECB": [((0, 0), (128, 128))]
     },
-	"ARIAL:2": {
+	"ARIAL:3": {
 		"ACTIONABLE": ["DOUBLEJUMP"],
 		"HITBOXES": [],
 		"HURTBOXES": [],
