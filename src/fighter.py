@@ -15,6 +15,7 @@ fighter_map = {
         "JUMPSTRENGTH": -16,
         "SHORTHOPTRENGTH": -8,
         "ARIALSPEED": 8,
+        "BASELANDINGLAG": 3,
         "DOUBLEJUMPSTRENGTH": 20,
         "GRAV": 1,
         "FLOAT": 8,
@@ -38,6 +39,7 @@ fighter_map = {
         "JUMPSTRENGTH": -16,
         "SHORTHOPTRENGTH": -8,
         "ARIALSPEED": 8,
+        "BASELANDINGLAG": 3,
         "DOUBLEJUMPSTRENGTH": 20,
         "GRAV": 1,
         "FLOAT": 8,
@@ -61,6 +63,7 @@ fighter_map = {
         "JUMPSTRENGTH": -16,
         "SHORTHOPTRENGTH": -8,
         "ARIALSPEED": 8,
+        "BASELANDINGLAG": 3,
         "DOUBLEJUMPSTRENGTH": 20,
         "GRAV": 1,
         "FLOAT": 8,
@@ -93,7 +96,10 @@ class Fighter(object):
         self.short_hop_strength = template["SHORTHOPTRENGTH"]
         self.double_jump_strength = template["DOUBLEJUMPSTRENGTH"]
         self.has_double_jump = True
-        
+
+        self.landing_lag = 0
+        self.base_landing_lag = template["BASELANDINGLAG"]
+
         self.grav = template["GRAV"]
 
         self.inp = {
@@ -135,7 +141,7 @@ class Fighter(object):
         self.hitboxes = []
         self.hitbox_data = []
         self.hurtboxes = []
-        self.ECB = None
+        self.ECB = []
 
         self.update_boxes()
 
@@ -147,18 +153,18 @@ class Fighter(object):
             name = self.state + ":" + str(x)
             if name in self.data: return self.data[name]
             x -= 1
-        return []
+        return {"ACTIONABLE":[],"HITBOXES":[],"HURTBOXES":[],"ECB":[]}
 
     def update_boxes(self):
         move_data = self.get_move_data()
         self.hitboxes = []
         self.hitbox_data = []
         for hitbox in move_data["HITBOXES"]:
-            self.hitboxes.append(Rect(hitbox["RECT"][0] + self.X, hitbox["RECT"][0] + self.Y))
+            self.hitboxes.append(Rect(hitbox["RECT"][0][0] + self.X, hitbox["RECT"][0][1] + self.Y, hitbox["RECT"][1][0], hitbox["RECT"][1][1]))
             self.hitbox_data.append(hitbox)
-        self.hurtboxes = [Rect(hurtbox["RECT"][0] + self.X, hurtbox["RECT"][1] + self.Y)
+        self.hurtboxes = [Rect(hurtbox["RECT"][0][0] + self.X, hurtbox["RECT"][0][1] + self.Y, hurtbox["RECT"][1][0], hurtbox["RECT"][1][1])
                           for hurtbox in move_data["HURTBOXES"]]
-        self.ECB = [Rect(ecb["RECT"][0] + self.X, ecb["RECT"][1] + self.Y)
+        self.ECB = [Rect(ecb[0][0] + self.X, ecb[0][1] + self.Y, ecb[1][0], ecb[1][1])
                           for ecb in move_data["ECB"]]
 
     def check_collision(self, enemy):
@@ -169,6 +175,25 @@ class Fighter(object):
                 priority_hitbox = data if data["PRIO"] < priority_hitbox["PRIO"] else priority_hitbox
         self.hitstun = priority_hitbox["HITSTUN"]
         self.hitlag = priority_hitbox["HITLAG"]
+
+    def ecb_collision(self, G):
+        move_data = self.get_move_data()
+        stage = G["STAGE"]
+        floor = stage["HEIGHT"]
+        lowest = None
+        for rect in self.ECB:
+            if lowest is None or lowest.bottom > rect.bottom:
+                lowest = rect
+        if lowest:
+            print(lowest.bottom, floor)
+        if lowest is not None and lowest.bottom < floor:
+            self.Y += abs(lowest.bottom)
+            if "LANDINGLAG" in move_data["ACTIONABLE"]:
+                self.state = "LANDINGLAG"
+                self.landing_lag = move_data["LANDINGLAG"]
+            else:
+                self.state = "LANDING"
+                self.landing_lag = self.base_landing_lag
 
     def get_sprite(self):
         if self.direction > 0:
@@ -227,6 +252,10 @@ class Fighter(object):
         elif self.inp["BTN1"] and "DASHATK1" in move_data["ACTIONABLE"]:
             self.state = "DASHATK1"
 
+        elif self.state == "LANDING" or self.state == "LANDINGLAG":
+            if self.landing_lag == 0:
+                self.state = "STAND"
+
         # DEFAULT BACK TO STAND
         elif "STAND" in move_data["ACTIONABLE"]:
             self.state = "STAND"
@@ -265,6 +294,7 @@ class Fighter(object):
     def update(self, G):
         opponent = G["P2"]["ACTIVE"] if G["P1"]["ACTIVE"] is self else G["P1"]["ACTIVE"]
         self.check_collision(opponent)
+        self.ecb_collision(G)
 
         self.update_state()
         self.apply_state()
