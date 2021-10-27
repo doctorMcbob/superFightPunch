@@ -41,7 +41,7 @@ class ControllerHandler(object):
         elif self.P2 is None:
             self.P2 = controller
 
-    def update(self):
+    def update(self, SENS=0.4):
         pygame.event.pump()
         keys = pygame.key.get_pressed()
         if keys[self.QUITKEY] or pygame.event.peek(QUIT): quit()
@@ -53,24 +53,26 @@ class ControllerHandler(object):
                 for key in player.inp:
                     player.inp[key] = keys[P["map"][key]]
 
-#            if P["type"] == "joy":
-#                check_axis = True
-                # joy = P["joy"]
-                # if joy.get_numhats():
-                #     hat = joy.get_hat(0)
-                #     if any(hat): check_axis = False
-                #     player.MOV_LEFT = hat[0] == -1
-                #     player.MOV_RIGHT = hat[0] == 1
-                #     player.MOV_UP = hat[1] == 1
-                #     player.MOV_DOWN = hat[1] == -1
+            if P["type"] == "joy":
+                check_axis = True
+                joy = P["joy"]
+                if joy.get_numhats():
+                    hat = joy.get_hat(0)
+                    if any(hat): check_axis = False
+                    player.inp["LEFT"] = hat[0] == -1 
+                    player.inp["RIGHT"] = hat[0] == 1
+                    player.inp["UP"] = hat[1] == 1
+                    player.inp["DOWN"] = hat[1] == -1
 
                 
-                # if joy.get_numaxes() and check_axis:
-                #     player.MOV_LEFT = joy.get_axis(P["map"]["left"]) < -.4
-                #     player.MOV_RIGHT = joy.get_axis(P["map"]["right"]) > .4
-                #     player.MOV_UP = joy.get_axis(P["map"]["up"]) < -.4
-                #     player.MOV_DOWN = joy.get_axis(P["map"]["down"]) > .4
+                if joy.get_numaxes() and check_axis:
+                    player.inp["LEFT"] = joy.get_axis(P["map"]["LEFT"]) < 0-SENS
+                    player.inp["RIGHT"] = joy.get_axis(P["map"]["RIGHT"]) > SENSE
+                    player.inp["UP"] = joy.get_axis(P["map"]["UP"]) < 0-SENS
+                    player.inp["DOWN"] = joy.get_axis(P["map"]["DOWN"]) > SENS
                 
-                # player.BTN_0 = joy.get_button(P["map"]["btn 0"])
-                # player.BTN_1 = joy.get_button(P["map"]["btn 1"])
+                player.inp["BTN0"] = joy.get_button(P["map"]["BTN0"])
+                player.inp["BTN1"] = joy.get_button(P["map"]["BTN1"])
+                player.inp["BTN2"] = joy.get_button(P["map"]["BTN2"])
+                player.inp["BTN3"] = joy.get_button(P["map"]["BTN3"])
                 

@@ -22,6 +22,15 @@ FALLBACK_KEY_MAP = {
     }
 }
 
+FALLBACK_BTN_MAP = {
+    "START": 9,
+    "SWORDIE": 3,
+    "BRAWLER": 0,
+    "SPEEDLE": 1,
+    "QUIT": 10,
+    "NAMES": ["□", "X", "O"]
+}
+
 ICONS = load_spritesheet(
     "icons-Sheet.png",
     {
@@ -58,28 +67,38 @@ def drawn_character_menu(G, KEY_MAP):
     surf.blit(G["HEL16"].render("PUNCH", 0, (0, 0, 0)), (W // 2 - 32, (H // 3) * 2 + 16))
     return surf
 
-def run(G, KEY_MAP=FALLBACK_KEY_MAP):
+def run(G, KEY_MAP=FALLBACK_KEY_MAP, BTN_MAP=FALLBACK_BTN_MAP):
     for player in ("P1", "P2"):
         G[player] = {
             "CHARACTERS": [],
+            "CONTROLLER": None,
         }
+    joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
     while True:
         G["SCREEN"].blit(drawn_character_menu(G, KEY_MAP), (0, 0))
+        for joy in joysticks:
+            if joy not in [G[P]["CONTROLLER"] for P in ("P1", "P2")]:
+                if not joy.get_init():
+                    joy.init()
+                    print(joy.get_name())
+                for btn in range(joy.get_numbuttons()):
+                    if not joy.get_button(btn): continue
+                    player = G["P1"] if G["P1"]["CONTROLLER"] is None else G["P2"]
+                    player["CONTROLLER"] = joy
+                
         pygame.display.update()
-        for e in pygame.event.get():
-            if e.type == QUIT or e.type == KEYDOWN and any(e.key == KEY_MAP[p]["QUIT"] for p in ["P1", "P2"]):
+        pygame.event.pump()
+        keys = pygame.key.get_pressed()
+        if pygame.event.peek(QUIT) or any(keys[KEY_MAP[p]["QUIT"]] for p in ["P1", "P2"]):
                 quit()
-            if e.type == KEYDOWN:
-                for player in ("P1", "P2"):
-                    
-                    for character in ("SWORDIE", "BRAWLER", "SPEEDLE"):
-                        if (e.key == KEY_MAP[player][character]
-                            and character not in G[player]["CHARACTERS"]):
+        
+        for player in ("P1", "P2"):
+            for character in ("SWORDIE", "BRAWLER", "SPEEDLE"):
+                
+                if ((keys[KEY_MAP[player][character]] or G[player]["CONTROLLER"] is not None and G[player]["CONTROLLER"].get_button(BTN_MAP[character])) and character not in G[player]["CHARACTERS"]):
+                    G[player]["CHARACTERS"].append(character)
 
-                            G[player]["CHARACTERS"].append(character)
-
-                    if (e.key == KEY_MAP[player]["START"]
-                        and len(G["P1"]["CHARACTERS"] + G["P2"]["CHARACTERS"]) == 6):
-                        G["INMENU"] = False
-                        return G
-
+            if ((keys[KEY_MAP[player]["START"]] or G[player]["CONTROLLER"] is not None and G[player]["CONTROLLER"].get_button(BTN_MAP["START"])) and len(G["P1"]["CHARACTERS"] + G["P2"]["CHARACTERS"]) == 6):
+                G["INMENU"] = False
+                return G
+                            
