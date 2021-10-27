@@ -41,7 +41,7 @@
 		"HURTBOXES": [],
 		"ECB": [((0, 0), (128, 128))]
     },
-	"ARIAL:15": {
+	"ARIAL:2": {
 		"ACTIONABLE": ["DOUBLEJUMP"],
 		"HITBOXES": [],
 		"HURTBOXES": [],
