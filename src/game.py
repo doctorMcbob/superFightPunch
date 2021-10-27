@@ -21,6 +21,7 @@ def set_up():
 
     pygame.display.set_caption("༼ つ ◕_◕ ༽つ Super Fight Punch ༼ つ ◕_◕ ༽つ")
     G["DEBUG"] = "-d" in sys.argv
+    G["REPLAYS"] = "-r" in sys.argv
 
     G["CLOCK"] = pygame.time.Clock()
     G["FPS"] = 60 if "-fps" not in sys.argv else int(sys.argv[sys.argv.index("-fps") + 1])
@@ -40,6 +41,11 @@ def set_up():
 def load(G):
     from src import menu
     from src import fight
+    if G["REPLAYS"]:
+        from src import printer
+        G["PRINTER"] = printer
+    else:
+        G["PRINTER"] = None
     G["MENU"] = menu
     G["FIGHT"] = fight
     return G

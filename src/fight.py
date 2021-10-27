@@ -81,6 +81,7 @@ def run(G, stage="airplane"):
             if G["DEBUG"]:
                 fighter.DEBUG(G)
 
+        if G["REPLAYS"]: G["PRINTER"].save_surface(G["SCREEN"])
         pygame.display.update()
 
         G["CONTROLLER"].update()

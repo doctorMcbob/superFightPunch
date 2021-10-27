@@ -184,10 +184,10 @@ class Fighter(object):
         for rect in self.ECB:
             if lowest is None or lowest.bottom > rect.bottom:
                 lowest = rect
-        if lowest:
-            print(lowest.bottom, floor)
-        if lowest is not None and lowest.bottom < floor:
-            self.Y += abs(lowest.bottom)
+        if lowest is not None and lowest.bottom > floor:
+            # LAND
+            self.has_double_jump = True
+            self.Y -= lowest.bottom - floor
             if "LANDINGLAG" in move_data["ACTIONABLE"]:
                 self.state = "LANDINGLAG"
                 self.landing_lag = move_data["LANDINGLAG"]
@@ -255,7 +255,7 @@ class Fighter(object):
         elif self.state == "LANDING" or self.state == "LANDINGLAG":
             if self.landing_lag == 0:
                 self.state = "STAND"
-
+            self.landing_lag -= 1
         # DEFAULT BACK TO STAND
         elif "STAND" in move_data["ACTIONABLE"]:
             self.state = "STAND"
