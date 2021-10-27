@@ -71,20 +71,20 @@ def run(G, KEY_MAP=FALLBACK_KEY_MAP, BTN_MAP=FALLBACK_BTN_MAP):
     for player in ("P1", "P2"):
         G[player] = {
             "CHARACTERS": [],
-            "CONTROLLER": None,
+            "JOY": None,
         }
     joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
     while True:
         G["SCREEN"].blit(drawn_character_menu(G, KEY_MAP), (0, 0))
         for joy in joysticks:
-            if joy not in [G[P]["CONTROLLER"] for P in ("P1", "P2")]:
+            if joy not in [G[P]["JOY"] for P in ("P1", "P2")]:
                 if not joy.get_init():
                     joy.init()
                     print(joy.get_name())
                 for btn in range(joy.get_numbuttons()):
                     if not joy.get_button(btn): continue
-                    player = G["P1"] if G["P1"]["CONTROLLER"] is None else G["P2"]
-                    player["CONTROLLER"] = joy
+                    player = G["P1"] if G["P1"]["JOY"] is None else G["P2"]
+                    player["JOY"] = joy
                 
         pygame.display.update()
         pygame.event.pump()
@@ -95,10 +95,10 @@ def run(G, KEY_MAP=FALLBACK_KEY_MAP, BTN_MAP=FALLBACK_BTN_MAP):
         for player in ("P1", "P2"):
             for character in ("SWORDIE", "BRAWLER", "SPEEDLE"):
                 
-                if ((keys[KEY_MAP[player][character]] or G[player]["CONTROLLER"] is not None and G[player]["CONTROLLER"].get_button(BTN_MAP[character])) and character not in G[player]["CHARACTERS"]):
+                if ((keys[KEY_MAP[player][character]] or G[player]["JOY"] is not None and G[player]["JOY"].get_button(BTN_MAP[character])) and character not in G[player]["CHARACTERS"]):
                     G[player]["CHARACTERS"].append(character)
 
-            if ((keys[KEY_MAP[player]["START"]] or G[player]["CONTROLLER"] is not None and G[player]["CONTROLLER"].get_button(BTN_MAP["START"])) and len(G["P1"]["CHARACTERS"] + G["P2"]["CHARACTERS"]) == 6):
+            if ((keys[KEY_MAP[player]["START"]] or G[player]["JOY"] is not None and G[player]["JOY"].get_button(BTN_MAP["START"])) and len(G["P1"]["CHARACTERS"] + G["P2"]["CHARACTERS"]) == 6):
                 G["INMENU"] = False
                 return G
                             

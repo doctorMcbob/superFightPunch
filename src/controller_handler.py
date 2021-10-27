@@ -22,6 +22,17 @@ DEFAULT_KEY_MAP = {
         "BTN2": K_t,
         "BTN3": K_y,
     },
+    "JOY": {
+        "LEFT": 0,
+        "UP": 1,
+        "RIGHT": 0,
+        "DOWN": 1,
+        "BTN0": 0,
+        "BTN1": 1,
+        "BTN2": 2,
+        "BTN3": 3,
+    },
+
 }
 class ControllerHandler(object):
     def __init__(self, QUITKEY=K_ESCAPE):
@@ -67,7 +78,7 @@ class ControllerHandler(object):
                 
                 if joy.get_numaxes() and check_axis:
                     player.inp["LEFT"] = joy.get_axis(P["map"]["LEFT"]) < 0-SENS
-                    player.inp["RIGHT"] = joy.get_axis(P["map"]["RIGHT"]) > SENSE
+                    player.inp["RIGHT"] = joy.get_axis(P["map"]["RIGHT"]) > SENS
                     player.inp["UP"] = joy.get_axis(P["map"]["UP"]) < 0-SENS
                     player.inp["DOWN"] = joy.get_axis(P["map"]["DOWN"]) > SENS
                 

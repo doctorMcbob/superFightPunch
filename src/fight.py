@@ -57,6 +57,9 @@ def run(G, stage="airplane"):
     G["P2"]["ACTIVE"] = Fighter(fighter_map[G["P2"]["CHARACTERS"].pop(0)])
     
     for P in ["P1", "P2"]:
+        if G[P]["JOY"]:
+            G["CONTROLLER"].add_player(G[P]["ACTIVE"], DEFAULT_KEY_MAP["JOY"], joystick=G[P]["JOY"])
+            continue
         G["CONTROLLER"].add_player(G[P]["ACTIVE"], DEFAULT_KEY_MAP[P])
     
     G["P1"]["ACTIVE"].X = 32
