@@ -1,6 +1,6 @@
 #!/bin/bash
 s=""
-for ((n=0;n<=200;n++))
+for ((n=0;n<=250;n++))
 do
 	s="${s} ${n}.png"
 done

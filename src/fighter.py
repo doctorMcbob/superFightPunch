@@ -150,7 +150,7 @@ class Fighter(object):
             name = self.state + ":" + str(x)
             if name in self.data: return self.data[name]
             x -= 1
-        return {"ACTIONABLE":[],"HITBOXES":[],"HURTBOXES":[],"ECB":[]}
+        return {"ACTIONABLE":[],"HITBOXES":[],"HURTBOXES":[],"ECB":[((0, 112), (128, 16))]}
 
     def update_boxes(self):
         move_data = self.get_move_data()
@@ -179,16 +179,16 @@ class Fighter(object):
             if lowest is None or lowest.bottom > rect.bottom:
                 lowest = rect
         if lowest is not None and lowest.bottom > floor:
-            return True, lowest.bottom - floor
-        return False
+            return True, floor
+        return False, 0
 
     def _check_plats(self, plats):
-        if not self.platform_drop and self.Y_VEL > 0:
+        if self.Y_VEL >= 0:
             for plat in plats:
                 for ecbox in self.ECB:
                     if plat.colliderect(ecbox):
-                        return True, ecbox.bottom - plat.top - 1
-        return False, 0
+                        return True, plat.top
+        return False
     
     def ecb_collision(self, G):
         move_data = self.get_move_data()
@@ -196,24 +196,16 @@ class Fighter(object):
         plats = stage["PLAT"]
         floor = stage["HEIGHT"]
 
-        collision, offset = self._check_floor(floor) or self._check_plats(plats)
+        collision, offset = self._check_plats(plats) or self._check_floor(floor)
         if collision and self.state in ["ARIAL", "ARIALATK0", "ARIALATK1"]:
             self.has_double_jump = True
-            self.Y -= offset
+            self.Y = offset - self.H
             if "LANDINGLAG" in move_data["ACTIONABLE"]:
                 self.state = "LANDINGLAG"
                 self.landing_lag = move_data["LANDINGLAG"]
             else:
                 self.state = "LANDING"
                 self.landing_lag = self.base_landing_lag
-        else:
-            self.ECB = [ecbox.move(0, -4) for ecbox in self.ECB]
-            collision, offset = self._check_floor(floor) or self._check_plats(plats)
-            if collision: return collision
-            #if self.state not in ["ARIAL", "ARIALATK0", "ARIALATK1"]:
-            #    self.state = "ARIAL"
-            self.platform_drop = False
-            return False
 
     def get_sprite(self):
         if self.direction > 0:
@@ -241,7 +233,7 @@ class Fighter(object):
         state = self.state
 
         # JUMP FUNCTIONALITY
-        if self.inp["BTN2"] and not self.inp["DOWN"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
+        if self.inp["BTN2"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
             self.state = "JUMPSQUAT"
         elif self.inp["BTN2"] and "DOUBLEJUMP" in move_data["ACTIONABLE"] and self.has_double_jump and self.can_double_jump:
             self.state = "DOUBLEJUMP"
@@ -292,7 +284,7 @@ class Fighter(object):
         y = self.inp["UP"] * -1 + self.inp["DOWN"] * 1
         return (x, y)
         
-    def apply_state(self):
+    def apply_state(self, G):
         d = self._dir_as_tuple()
         if self.state in ["STAND", "WALK"]:
             self.platform_drop = self.inp["DOWN"] and self.inp["BTN2"]
@@ -321,7 +313,7 @@ class Fighter(object):
             self.X_VEL *= self.traction if abs(self.X_VEL) > 1 else 0
         if self.state in ["STAND", "LANDING", "LANDINGLAG"]:
             self.Y_VEL = 0
-        
+
         if self.state == "WALK":
             if not abs(self.X_VEL) > self.walk_speed:
                 self.X_VEL = self.walk_speed * d[0]
@@ -334,6 +326,16 @@ class Fighter(object):
         if self.state == "ARIAL":
             self.Y_VEL += self.grav
 
+        if self.state not in ["ARIAL", "ARIALATK0", "ARIALATK1"] and not self._on_land(G):
+            self.state = "ARIAL"
+            
+
+    def _on_land(self, G):
+        self.ECB = [Rect(ecbox.x, ecbox.y+8, ecbox.w, ecbox.h) for ecbox in self.ECB]
+        collisions, offset = self._check_plats(G["STAGE"]["PLAT"]) or self._check_floor(G["STAGE"]["HEIGHT"])
+        self.update_boxes()
+        return collisions
+
     def update(self, G):
         opponent = G["P2"]["ACTIVE"] if G["P1"]["ACTIVE"] is self else G["P1"]["ACTIVE"]
         self.check_collision(opponent)
@@ -342,7 +344,7 @@ class Fighter(object):
         self.update_boxes()
 
         self.update_state()
-        self.apply_state()
+        self.apply_state(G)
 
         self.X += self.X_VEL
         self.Y += self.Y_VEL
@@ -372,4 +374,6 @@ class Fighter(object):
         G["SCREEN"].blit(G["HEL16"].render("HITSTUN: {}".format(self.hitstun), 0, (80, 0, 0)), (x, y))
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("PLAT DROP: {}".format(self.platform_drop), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("ON LAND: {}".format(self._on_land(G)), 0, (80, 0, 0)), (x, y))
         

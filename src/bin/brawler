@@ -35,13 +35,13 @@
 		"HURTBOXES": [],
 		"ECB": [((0, 112), (128, 16))]
     },
-	"ARIAL:0": {
+    "ARIAL:0": {
 		"ACTIONABLE": [],
 		"HITBOXES": [],
 		"HURTBOXES": [],
 		"ECB": [((0, 112), (128, 16))]
     },
-	"ARIAL:3": {
+    "ARIAL:3": {
 		"ACTIONABLE": ["DOUBLEJUMP"],
 		"HITBOXES": [],
 		"HURTBOXES": [],
