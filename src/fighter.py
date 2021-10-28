@@ -1,3 +1,4 @@
+from os import environb
 import pygame
 from pygame import Surface, Rect
 
@@ -13,12 +14,9 @@ fighter_map = {
         "WALKSPEED": 4,
         "DASHSPEED": 8,
         "JUMPSTRENGTH": -16,
-        "SHORTHOPTRENGTH": -8,
-        "ARIALSPEED": 8,
         "BASELANDINGLAG": 3,
         "DOUBLEJUMPSTRENGTH": 16,
-        "GRAV": 1,
-        "FLOAT": 8,
+        "GRAV": 0.6,
         "TRACTION": 0.9,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
@@ -38,12 +36,9 @@ fighter_map = {
         "WALKSPEED": 3,
         "DASHSPEED": 10,
         "JUMPSTRENGTH": -16,
-        "SHORTHOPTRENGTH": -8,
-        "ARIALSPEED": 8,
         "BASELANDINGLAG": 3,
         "DOUBLEJUMPSTRENGTH": 16,
-        "GRAV": 1,
-        "FLOAT": 8,
+        "GRAV": 0.8,
         "TRACTION": 0.6,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
@@ -62,13 +57,10 @@ fighter_map = {
         "H": 128,
         "WALKSPEED": 5,
         "DASHSPEED": 10,
-        "JUMPSTRENGTH": -16,
-        "SHORTHOPTRENGTH": -8,
-        "ARIALSPEED": 8,
+        "JUMPSTRENGTH": -20,
         "BASELANDINGLAG": 3,
         "DOUBLEJUMPSTRENGTH": 20,
         "GRAV": 1,
-        "FLOAT": 8,
         "TRACTION": 0.8,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
@@ -96,10 +88,10 @@ class Fighter(object):
         self.dash = None
 
         self.jump_strength = template["JUMPSTRENGTH"]
-        self.short_hop_strength = template["SHORTHOPTRENGTH"]
         self.double_jump_strength = template["DOUBLEJUMPSTRENGTH"]
         self.has_double_jump = True
         self.can_double_jump = False
+        self.platform_drop = False
 
         self.landing_lag = 0
         self.base_landing_lag = template["BASELANDINGLAG"]
@@ -181,24 +173,47 @@ class Fighter(object):
         self.hitstun = priority_hitbox["HITSTUN"]
         self.hitlag = priority_hitbox["HITLAG"]
 
-    def ecb_collision(self, G):
-        move_data = self.get_move_data()
-        stage = G["STAGE"]
-        floor = stage["HEIGHT"]
+    def _check_floor(self, floor):
         lowest = None
         for rect in self.ECB:
             if lowest is None or lowest.bottom > rect.bottom:
                 lowest = rect
         if lowest is not None and lowest.bottom > floor:
-            # LAND
+            return True, lowest.bottom - floor
+        return False
+
+    def _check_plats(self, plats):
+        if not self.platform_drop and self.Y_VEL > 0:
+            for plat in plats:
+                for ecbox in self.ECB:
+                    if plat.colliderect(ecbox):
+                        return True, ecbox.bottom - plat.top - 1
+        return False, 0
+    
+    def ecb_collision(self, G):
+        move_data = self.get_move_data()
+        stage = G["STAGE"]
+        plats = stage["PLAT"]
+        floor = stage["HEIGHT"]
+
+        collision, offset = self._check_floor(floor) or self._check_plats(plats)
+        if collision and self.state in ["ARIAL", "ARIALATK0", "ARIALATK1"]:
             self.has_double_jump = True
-            self.Y -= lowest.bottom - floor
+            self.Y -= offset
             if "LANDINGLAG" in move_data["ACTIONABLE"]:
                 self.state = "LANDINGLAG"
                 self.landing_lag = move_data["LANDINGLAG"]
             else:
                 self.state = "LANDING"
                 self.landing_lag = self.base_landing_lag
+        else:
+            self.ECB = [ecbox.move(0, -4) for ecbox in self.ECB]
+            collision, offset = self._check_floor(floor) or self._check_plats(plats)
+            if collision: return collision
+            #if self.state not in ["ARIAL", "ARIALATK0", "ARIALATK1"]:
+            #    self.state = "ARIAL"
+            self.platform_drop = False
+            return False
 
     def get_sprite(self):
         if self.direction > 0:
@@ -226,7 +241,7 @@ class Fighter(object):
         state = self.state
 
         # JUMP FUNCTIONALITY
-        if self.inp["BTN2"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
+        if self.inp["BTN2"] and not self.inp["DOWN"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
             self.state = "JUMPSQUAT"
         elif self.inp["BTN2"] and "DOUBLEJUMP" in move_data["ACTIONABLE"] and self.has_double_jump and self.can_double_jump:
             self.state = "DOUBLEJUMP"
@@ -280,6 +295,7 @@ class Fighter(object):
     def apply_state(self):
         d = self._dir_as_tuple()
         if self.state in ["STAND", "WALK"]:
+            self.platform_drop = self.inp["DOWN"] and self.inp["BTN2"]
             self.direction = d[0] if d[0] else self.direction
 
         if self.frame == 0:
@@ -323,6 +339,8 @@ class Fighter(object):
         self.check_collision(opponent)
         self.ecb_collision(G)
 
+        self.update_boxes()
+
         self.update_state()
         self.apply_state()
 
@@ -352,4 +370,6 @@ class Fighter(object):
         G["SCREEN"].blit(G["HEL16"].render("A:{BTN0} B:{BTN1} X:{BTN2} Y:{BTN3}".format(**self.inp), 0, (80, 0, 0)), (x, y))
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("HITSTUN: {}".format(self.hitstun), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("PLAT DROP: {}".format(self.platform_drop), 0, (80, 0, 0)), (x, y))
         
