@@ -128,12 +128,8 @@ class Fighter(object):
         self.frame = 0
         self.direction = 1
 
-        try:
-            with open("src/bin/"+template["MSFILENAME"]) as f:
-                self.data = eval(f.read())
-        except IOError:
-            print("Missing file: " + template["MSFILENAME"])
-            quit()
+        self.frame_data_filename = template["MSFILENAME"]
+        self._load_moves()
 
         self.hitboxes = []
         self.hitbox_data = []
@@ -142,15 +138,29 @@ class Fighter(object):
 
         self.update_boxes()
 
-    def get_move_data(self):
-        if self.state in self.data:
-            return self.data[self.state]
+    def _load_moves(self):
+        try:
+            with open("src/bin/"+self.frame_data_filename) as f:
+                self.data = eval(f.read())
+            return self.data
+        except IOError:
+            print("Missing file: "+self.frame_data_filename)
+            return None
+
+    def _get_move_identifier(self):
+        if self.state in self.data: return self.state
         x = self.frame
         while x >= 0:
             name = self.state + ":" + str(x)
-            if name in self.data: return self.data[name]
+            if name in self.data: return name
             x -= 1
-        return {"ACTIONABLE":[],"HITBOXES":[],"HURTBOXES":[],"ECB":[((0, 112), (128, 16))]}
+        return None
+
+    def get_move_data(self):
+        name = self._get_move_identifier()
+        return self.data[name] if name is not None else {
+            "ACTIONABLE":[],"HITBOXES":[],"HURTBOXES":[],"ECB":[((0, 112), (128, 16))]
+        }
 
     def update_boxes(self):
         move_data = self.get_move_data()
