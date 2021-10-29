@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import pygame
-import pygame.gfxdraw
 from pygame import Surface, Rect
 from pygame.locals import *
 
@@ -104,11 +103,12 @@ def expect_input(expectlist=[]):
                     if e.key in expectlist: return e.key
                 else: return e.key
 
-
 def expect_click(G, cb=lambda *args: None):
     while True:
         mpos = pygame.mouse.get_pos()
         draw(G)
+        draw_grid(G)
+        draw_boxes(G)
         cb(G)
         G["SCREEN"].blit(G["HEL16"].render("{}".format((mpos[0] // 4, mpos[1] // 4)), 0, (0, 0, 0)), mpos)
         pygame.display.update()
@@ -117,6 +117,14 @@ def expect_click(G, cb=lambda *args: None):
             if e.type == MOUSEBUTTONDOWN:
                 return e.pos, e.button
 
+def draw_grid(G):
+    x, y = -1, -1
+    while x <= FIGHTER.W * 4:
+        pygame.draw.line(G["SCREEN"], (30, 130, 30), (x, 0), (x, FIGHTER.H * 4))
+        x += 4
+    while y <= FIGHTER.H * 4:
+        pygame.draw.line(G["SCREEN"], (30, 130, 30), (y, 0), (y, FIGHTER.W * 4))
+        y += 4
 
 def select_from_list(G, list, pos):
     idx = 0
@@ -192,14 +200,22 @@ def input_rect(G):
     y1 = min(pos[1], pos2[1]) // 4
     y2 = max(pos[1], pos2[1]) // 4
     return (x1, y1), ((x2 - x1), (y2 - y1))
-                              
+
+def draw_boxes(G):
+    for ecbox in FIGHTER.ECB:
+        draw_box(G, G["SCREEN"], ecbox, COLECB)
+    for hitbox in FIGHTER.hitboxes:
+        draw_box(G, G["SCREEN"], hitbox, COLHIT)
+    for hurtbox in FIGHTER.hurtboxes:
+        draw_box(G, G["SCREEN"], hurtbox, COLHRT)
+
+
 def draw(G):
     G["SCREEN"].fill((200, 200, 250))
     if FIGHTER is not None:
         G["SCREEN"].blit(drawn_fighter(), (0, 0))
         FIGHTER.update_boxes()
-        for ecbox in FIGHTER.ECB:
-            draw_box(G, G["SCREEN"], ecbox, COLECB)
+        draw_boxes(G)
         move_data = FIGHTER.get_move_data()
         G["SCREEN"].blit(G["HEL32"].render(FIGHTER._get_move_identifier(), 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 32))
         G["SCREEN"].blit(G["HEL32"].render("STATE:{}".format(STATE), 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 96))
@@ -207,14 +223,23 @@ def draw(G):
         y = 0
         G["SCREEN"].blit(G["HEL16"].render("ACTIONABLE:", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256, y))
         y += 16
-        G["SCREEN"].blit(G["HEL16"].render("{}".format(move_data["ACTIONABLE"]), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 - 32, y))
-
+        G["SCREEN"].blit(G["HEL16"].render("{}".format(move_data["ACTIONABLE"]), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 + 32, y))
     
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("ECB", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256, y))
         for ecbox in FRAME_DATA[FIGHTER._get_move_identifier()]["ECB"]:
             y += 16
             G["SCREEN"].blit(G["HEL16"].render("{}".format(ecbox), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 + 32, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("HURTBOXES", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256, y))
+        for hurtbox in FRAME_DATA[FIGHTER._get_move_identifier()]["HURTBOXES"]:
+            y += 16
+            G["SCREEN"].blit(G["HEL16"].render("{}".format(hurtbox), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 + 32, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("HITBOX", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256, y))
+        for hitbox in FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"]:
+            y += 16
+            G["SCREEN"].blit(G["HEL16"].render("{}".format(hitbox), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 + 32, y))
 
     if SHOW_LOG:
         G["SCREEN"].blit(LOG, (G["W"] - 256, 0))
@@ -254,15 +279,24 @@ def run(G):
             if not FIGHTER._get_move_identifier():
                 FRAME_DATA["{}:{}".format(STATE, FRAME)] = deepcopy(BASE_STATE)
                 FIGHTER.data = FRAME_DATA
-                log(G, "Added new state identifier {}:{}".format(STATE, FRAME))
+                log(G, " {}:{}".format(STATE, FRAME))
+                log(G, "Added new state identifier")
                 SAVED = False
 
         if inp == K_e and mods & KMOD_SHIFT:
             pos, dim = input_rect(G)
             FIGHTER.ECB.append(Rect(pos, dim))
             FRAME_DATA["{}:{}".format(STATE, FRAME)]["ECB"].append((pos, dim))
-            log(G, "Added new ECBox")
             log(G, "  {}".format((pos, dim)))
+            log(G, "Added new ECBox")
+            SAVED = False
+
+        if inp == K_u and mods & KMOD_SHIFT:
+            pos, dim = input_rect(G)
+            FIGHTER.hitboxes.append(Rect(pos, dim))
+            FRAME_DATA["{}:{}".format(STATE, FRAME)]["HURTBOXES"].append((pos, dim))
+            log(G, "  {}".format((pos, dim)))
+            log(G, "Added new HURTBOX")
             SAVED = False
             
         if inp == K_s and mods & KMOD_CTRL:

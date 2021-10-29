@@ -363,7 +363,7 @@ class Fighter(object):
 
         self.update_boxes()
 
-        self.frame += 1
+        self.frame = min(self.frame + 1, 500)
 
     def DEBUG(self, G):
         x, y = self.X + self.W, self.Y - 64
