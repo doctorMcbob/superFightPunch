@@ -169,7 +169,7 @@ class Fighter(object):
         for hitbox in move_data["HITBOXES"]:
             self.hitboxes.append(Rect(hitbox["RECT"][0][0] + self.X, hitbox["RECT"][0][1] + self.Y, hitbox["RECT"][1][0], hitbox["RECT"][1][1]))
             self.hitbox_data.append(hitbox)
-        self.hurtboxes = [Rect(hurtbox["RECT"][0][0] + self.X, hurtbox["RECT"][0][1] + self.Y, hurtbox["RECT"][1][0], hurtbox["RECT"][1][1])
+        self.hurtboxes = [Rect(hurtbox[0][0] + self.X, hurtbox[0][1] + self.Y, hurtbox[1][0], hurtbox[1][1])
                           for hurtbox in move_data["HURTBOXES"]]
         self.ECB = [Rect(ecb[0][0] + self.X, ecb[0][1] + self.Y, ecb[1][0], ecb[1][1])
                           for ecb in move_data["ECB"]]
