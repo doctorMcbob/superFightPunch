@@ -18,7 +18,7 @@ def load_stage(G, name):
     return {
       "PLAT"   : [Rect(pos, dim) for pos, dim in stage["PLAT"]],
       "WIDTH"  : stage["WIDTH"],
-      "HEIGHT" : G["SCREEN"].get_height()
+      "HEIGHT" : 640
     }
 
 def get_stage(G, name):

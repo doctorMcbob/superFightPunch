@@ -6,10 +6,31 @@ from src.fighter import Fighter, fighter_map
 from src.controller_handler import ControllerHandler, DEFAULT_KEY_MAP
 from src.stage import get_stage
 
+SCROLX, SCROLY = 0, 0
+
 METER_IN_COLOR = [(110, 120, 200), (110, 200, 120), (110, 200, 200), (250,  80,  80)]
 METER_OU_COLOR = [( 80,  80, 140), ( 80, 140,  80), ( 80, 140, 140), (180,  20,  20)]
 
 def percentage(part, whole): return float(part)/float(whole)
+
+def update_scroller(G):
+    global SCROLX, SCROLY
+    # calculate center between the fighters
+    p1, p2 = G["P1"]["ACTIVE"], G["P2"]["ACTIVE"]
+    x1, y1 = p1.X + p1.W // 2, p1.Y
+    x2, y2 = p2.X + p2.W // 2, p2.Y
+    x = abs(x1 - x2) // 2 + min(x1, x2)
+    y = abs(y1 - y2) // 2 + min(y1, y2)
+    SCROLX = x - G["SCREEN"].get_width() // 2
+    SCROLY = y - G["STAGE"]["HEIGHT"]// 2
+    SCROLX = max(0, SCROLX)
+    SCROLX = min(G["STAGE"]["WIDTH"] - G["SCREEN"].get_width(), SCROLX)
+
+def scroll(pos):
+    if type(pos) == Rect:
+        return Rect(scroll((pos.x, pos.y)), (pos.w, pos.h))
+    x, y = pos
+    return x-SCROLX, y-SCROLY
 
 def draw_HUD(G, dest):
     W = dest.get_width()
@@ -39,12 +60,13 @@ def draw_HUD(G, dest):
 
 def draw_fighter(dest, fighter):
     sprite = fighter.get_sprite()
-    dest.blit(sprite, (fighter.X, fighter.Y))
+    dest.blit(sprite, scroll((fighter.X, fighter.Y)))
 
 
 def draw_stage(dest, stage):
     for rect in stage["PLAT"]:
-        pygame.draw.rect(dest, (80, 80, 80), rect)
+        pygame.draw.rect(dest, (80, 80, 80), scroll(rect))
+    pygame.draw.rect(dest, (80, 80, 80), scroll(Rect((0, stage["HEIGHT"]), (stage["WIDTH"], 4))))
 
 def run(G, stage="airplane"):
     # re do all this once the moving pieces are finished
@@ -63,14 +85,15 @@ def run(G, stage="airplane"):
         G["CONTROLLER"].add_player(G[P]["ACTIVE"], DEFAULT_KEY_MAP[P])
     
     G["P1"]["ACTIVE"].X = 32
-    G["P1"]["ACTIVE"].Y = G["SCREEN"].get_height() - G["P1"]["ACTIVE"].H
+    G["P1"]["ACTIVE"].Y = G["STAGE"]["HEIGHT"]- G["P1"]["ACTIVE"].H
 
     G["P2"]["ACTIVE"].X = G["SCREEN"].get_width() - G["P2"]["ACTIVE"].W - 32
-    G["P2"]["ACTIVE"].Y = G["SCREEN"].get_height() - G["P2"]["ACTIVE"].H
+    G["P2"]["ACTIVE"].Y = G["STAGE"]["HEIGHT"]- G["P2"]["ACTIVE"].H
     G["P2"]["ACTIVE"].direction = -1
 
     while True:
         G["CLOCK"].tick(G["FPS"])
+        update_scroller(G)
         G["SCREEN"].fill((200, 200, 250))
         draw_stage(G["SCREEN"], G["STAGE"])
 
