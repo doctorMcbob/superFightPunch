@@ -84,10 +84,10 @@ def run(G, stage="airplane"):
             continue
         G["CONTROLLER"].add_player(G[P]["ACTIVE"], DEFAULT_KEY_MAP[P])
     
-    G["P1"]["ACTIVE"].X = 32
+    G["P1"]["ACTIVE"].X = G["STAGE"]["WIDTH"] // 2 - 256
     G["P1"]["ACTIVE"].Y = G["STAGE"]["HEIGHT"]- G["P1"]["ACTIVE"].H
 
-    G["P2"]["ACTIVE"].X = G["SCREEN"].get_width() - G["P2"]["ACTIVE"].W - 32
+    G["P2"]["ACTIVE"].X = G["STAGE"]["WIDTH"] // 2 - G["P2"]["ACTIVE"].W + 256
     G["P2"]["ACTIVE"].Y = G["STAGE"]["HEIGHT"]- G["P2"]["ACTIVE"].H
     G["P2"]["ACTIVE"].direction = -1
 
