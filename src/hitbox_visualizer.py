@@ -338,8 +338,17 @@ def run(G):
             log(G, "Added new HITBOX")
             SAVED = False
 
-        if inp == K_d and mods & KMOD_SHIFT:
-            log(G, delete_box(G))
+        if inp == K_n and mods & KMOD_SHIFT:
+            identifier = "{}:{}".format(STATE, FRAME)
+            log(G, identifier)
+            if identifier in FRAME_DATA:
+                log(G, "state already exists")
+                continue
+            else:
+                FRAME_DATA[identifier] = deepcopy(BASE_STATE)
+                SAVED = False
+                log(G, "Added new state")
+
 
         if inp == K_s and mods & KMOD_CTRL:
             log(G, save_moves(FRAME_DATA))
@@ -354,3 +363,9 @@ def run(G):
             FIGHTER = G["FIGHTER"]
             FRAME_DATA = load_moves(G["FIGHTER"])
             log(G, "Loaded Fighter {}".format(G["CHARACTER"]))
+
+        if inp == K_RIGHT:
+            FRAME += 1
+
+        if inp == K_LEFT:
+            FRAME = max(0, FRAME - 1)
