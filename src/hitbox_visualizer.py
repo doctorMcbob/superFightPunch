@@ -70,7 +70,7 @@ def draw_box(G, surf, rect, col, data={}):
     rect = resize(rect)
     x, y = rect.x, rect.y
     for key in data.keys():
-        surf.blit(G["HEL8"].render("{}:{}".render(key, data[key]), 0, (col)), (x, y))
+        surf.blit(G["HEL8"].render("{}:{}".format(key, data[key]), 0, (col)), (x, y))
     pygame.draw.rect(surf, col, rect, width=1)
 
 def drawn_fighter():
@@ -126,11 +126,12 @@ def draw_grid(G):
         pygame.draw.line(G["SCREEN"], (30, 130, 30), (y, 0), (y, FIGHTER.W * 4))
         y += 4
 
-def select_from_list(G, list, pos):
+def select_from_list(G, list, pos, cb=lambda *args: None):
     idx = 0
     while True:
         surf = Surface((256, 32*len(list)))
         surf.fill((230, 230, 230))
+        cb(G, idx)
         for i, text in enumerate(list):
             col = (0, 0, 0) if i != idx else (160, 110, 190)
             surf.blit(G["HEL32"].render(str(text), 0, col), (0, i*32))
@@ -209,6 +210,29 @@ def draw_boxes(G):
     for hurtbox in FIGHTER.hurtboxes:
         draw_box(G, G["SCREEN"], hurtbox, COLHRT)
 
+def delete_box(G):
+    global SAVED, FIGHTER
+    G["SCREEN"].blit(G["HEL32"].render("TYPE TO REMOVE", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
+    box_type = select_from_list(G, ["HITBOXES", "HURTBOXES", "ECB"], (G["SCREEN"].get_width() - 256, 0))
+    if box_type == "ECB":
+        boxes = FIGHTER.ECB
+    elif box_type == "HITBOXES":
+        boxes = FIGHTER.hitboxes
+    elif box_type == "HURTBOXES":
+        boxes = FIGHTER.hurtboxes
+    else: return "no boxes deleted"
+    draw(G)
+    def show_which(G, idx):
+        for i, box in enumerate(boxes):
+            col = (0, 0, 0) if i != idx else (255, 0, 0)
+            draw_box(G, G["SCREEN"], box, col, data={"this":"one"})
+    G["SCREEN"].blit(G["HEL32"].render("PICK BOX", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
+    box = select_from_list(G, boxes, (G["SCREEN"].get_width() - 256, 0), cb=show_which)
+    boxes.remove(box)
+    FRAME_DATA[FIGHTER._get_move_identifier()][box_type].remove(((box.x, box.y), (box.w, box.h)))
+    SAVED = False
+    return "removed box at {}".format((box.x, box.y))
+
 
 def draw(G):
     G["SCREEN"].fill((200, 200, 250))
@@ -272,10 +296,12 @@ def run(G):
 
         if inp == K_s and mods & KMOD_SHIFT:
             state = select_from_list(G, STATELIST, (G["SCREEN"].get_width() - 256, 0))
+            if not state: continue
             FIGHTER.state = state
             FIGHTER.frame = 0
             STATE = state
             FRAME = 0
+            log(G, "state {}".format(state))
             if not FIGHTER._get_move_identifier():
                 FRAME_DATA["{}:{}".format(STATE, FRAME)] = deepcopy(BASE_STATE)
                 FIGHTER.data = FRAME_DATA
@@ -298,7 +324,10 @@ def run(G):
             log(G, "  {}".format((pos, dim)))
             log(G, "Added new HURTBOX")
             SAVED = False
-            
+
+        if inp == K_d and mods & KMOD_SHIFT:
+            log(G, delete_box(G))
+
         if inp == K_s and mods & KMOD_CTRL:
             log(G, save_moves(FRAME_DATA))
         
