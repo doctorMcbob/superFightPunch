@@ -50,6 +50,7 @@ BASE_HITBOX = {
     "HITSTUN"    : 0,
     "HITLAG"     : 0,
     "DIRECTION"  : (0, 1),
+    "RECT"       : None,
 }
 
 BASE_STATE = {
@@ -70,7 +71,8 @@ def draw_box(G, surf, rect, col, data={}):
     rect = resize(rect)
     x, y = rect.x, rect.y
     for key in data.keys():
-        surf.blit(G["HEL8"].render("{}:{}".format(key, data[key]), 0, (col)), (x, y))
+        surf.blit(G["HEL16"].render("{}:{}".format(key, data[key]), 0, (col)), (x, y))
+        y += 16
     pygame.draw.rect(surf, col, rect, width=1)
 
 def drawn_fighter():
@@ -205,8 +207,8 @@ def input_rect(G):
 def draw_boxes(G):
     for ecbox in FIGHTER.ECB:
         draw_box(G, G["SCREEN"], ecbox, COLECB)
-    for hitbox in FIGHTER.hitboxes:
-        draw_box(G, G["SCREEN"], hitbox, COLHIT)
+    for i, hitbox in enumerate(FIGHTER.hitboxes):
+        draw_box(G, G["SCREEN"], hitbox, COLHIT, data=FIGHTER.hitbox_data[i])
     for hurtbox in FIGHTER.hurtboxes:
         draw_box(G, G["SCREEN"], hurtbox, COLHRT)
 
@@ -319,10 +321,21 @@ def run(G):
 
         if inp == K_u and mods & KMOD_SHIFT:
             pos, dim = input_rect(G)
-            FIGHTER.hitboxes.append(Rect(pos, dim))
+            FIGHTER.hurtboxes.append(Rect(pos, dim))
             FRAME_DATA["{}:{}".format(STATE, FRAME)]["HURTBOXES"].append((pos, dim))
             log(G, "  {}".format((pos, dim)))
             log(G, "Added new HURTBOX")
+            SAVED = False
+        
+        if inp == K_h and mods & KMOD_SHIFT:
+            pos, dim = input_rect(G)
+            hitbox = deepcopy(BASE_HITBOX)
+            hitbox["RECT"] = (pos, dim)
+            FIGHTER.hitboxes.append(Rect(pos, dim))
+            FIGHTER.hitbox_data.append(hitbox)
+            FRAME_DATA["{}:{}".format(STATE, FRAME)]["HITBOXES"].append(hitbox)
+            log(G, "  {}".format((pos, dim)))
+            log(G, "Added new HITBOX")
             SAVED = False
 
         if inp == K_d and mods & KMOD_SHIFT:
