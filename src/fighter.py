@@ -166,17 +166,37 @@ class Fighter(object):
             "ACTIONABLE":[],"HITBOXES":[],"HURTBOXES":[],"ECB":[]
         }
 
+    def flip_rect(self, rect_style):
+        pos, dim = rect_style
+        x, y = pos
+        w, h = dim
+
+        r = self.W
+        r -= x + w
+        return (r, y), dim
+
     def update_boxes(self):
         move_data = self.get_move_data()
         self.hitboxes = []
         self.hitbox_data = []
+        self.ECB = []
+        self.hurtboxes = []
+        
         for hitbox in move_data["HITBOXES"]:
-            self.hitboxes.append(Rect(hitbox["RECT"][0][0] + self.X, hitbox["RECT"][0][1] + self.Y, hitbox["RECT"][1][0], hitbox["RECT"][1][1]))
             self.hitbox_data.append(hitbox)
-        self.hurtboxes = [Rect(hurtbox[0][0] + self.X, hurtbox[0][1] + self.Y, hurtbox[1][0], hurtbox[1][1])
-                          for hurtbox in move_data["HURTBOXES"]]
-        self.ECB = [Rect(ecb[0][0] + self.X, ecb[0][1] + self.Y, ecb[1][0], ecb[1][1])
-                          for ecb in move_data["ECB"]]
+            hitbox = self.flip_rect(hitbox["RECT"]) if self.direction < 0 else hitbox["RECT"]
+            self.hitboxes.append(Rect(hitbox[0][0] + self.X, hitbox[0][1] + self.Y, hitbox[1][0], hitbox[1][1]))
+
+        for hurtbox in move_data["HURTBOXES"]:
+            if self.direction < 0:
+                hurtbox = self.flip_rect(hurtbox)
+            self.hurtboxes.append(Rect(hurtbox[0][0] + self.X, hurtbox[0][1] + self.Y, hurtbox[1][0], hurtbox[1][1]))
+
+        for ecb in move_data["ECB"]:
+            if self.direction < 0:
+                ecb = self.flip_rect(ecb)
+            self.ECB.append(Rect(ecb[0][0] + self.X, ecb[0][1] + self.Y, ecb[1][0], ecb[1][1]))
+
 
     def check_collision(self, enemy):
         priority_hitbox = {"PRIO": 100, "HITSTUN": 0, "HITLAG": 0}
@@ -221,10 +241,19 @@ class Fighter(object):
                 self.state = "LANDING"
                 self.landing_lag = self.base_landing_lag
 
-    def get_sprite(self):
-        if self.direction > 0:
-            return pygame.transform.flip(self._get_sprite(), 1, 0)
-        return self._get_sprite()
+    def draw_boxes(self, G, surf):
+        for ecbox in self.ECB:
+            pygame.draw.rect(surf, (0, 0, 255), G["SCROLL"](ecbox), width=1)
+        for i, hitbox in enumerate(self.hitboxes):
+            pygame.draw.rect(surf, (255, 0, 0), G["SCROLL"](hitbox), width=1)
+        for hurtbox in self.hurtboxes:
+            pygame.draw.rect(surf, (0, 155, 0), G["SCROLL"](hurtbox), width=1)
+
+    def get_sprite(self, G):
+        sprite = self._get_sprite() if not self.direction > 0 else pygame.transform.flip(self._get_sprite(), 1, 0)
+        if G["DEBUG"]:
+            self.draw_boxes(G, G["SCREEN"])
+        return sprite
             
     def _get_sprite(self):
         if self.state in self.spritesheet:
@@ -370,7 +399,8 @@ class Fighter(object):
         self.frame = min(self.frame + 1, 500)
 
     def DEBUG(self, G):
-        x, y = self.X + self.W, self.Y - 64
+        x = 0 if G["P1"]["ACTIVE"] is self else 512
+        y = 256
         G["SCREEN"].blit(G["HEL16"].render("STATE:{}".format(self.state), 0, (80, 0, 0)), (x, y))
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("FRAME:{}".format(self.frame), 0, (80, 0, 0)), (x, y))

@@ -58,8 +58,8 @@ def draw_HUD(G, dest):
             pygame.draw.rect(dest, METER_IN_COLOR[i], Rect((W - (i + 1) * 64, 36), (64, 24)))
 
 
-def draw_fighter(dest, fighter):
-    sprite = fighter.get_sprite()
+def draw_fighter(G, dest, fighter):
+    sprite = fighter.get_sprite(G)
     dest.blit(sprite, scroll((fighter.X, fighter.Y)))
 
 
@@ -72,7 +72,7 @@ def run(G, stage="airplane"):
     # re do all this once the moving pieces are finished
     # ie: fighters and stages
     G["CONTROLLER"] = ControllerHandler()
-    
+    G["SCROLL"] = scroll
     get_stage(G, stage)
     # Remove this once loading characters is written
     G["P1"]["ACTIVE"] = Fighter(fighter_map[G["P1"]["CHARACTERS"].pop(0)])
@@ -102,7 +102,7 @@ def run(G, stage="airplane"):
         draw_HUD(G, G["SCREEN"])
         for fighter in (G["P1"]["ACTIVE"], G["P2"]["ACTIVE"]):
             fighter.update(G)
-            draw_fighter(G["SCREEN"], fighter)
+            draw_fighter(G, G["SCREEN"], fighter)
 
             if G["DEBUG"]:
                 fighter.DEBUG(G)

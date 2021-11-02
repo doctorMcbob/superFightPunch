@@ -17,6 +17,19 @@ STATE = "STAND"
 FRAME = 0
 FRAME_DATA = {}
 
+SCRLX = 0
+SCRLY = 0
+
+def scroll(pos):
+    if type(pos) == Rect:
+        return Rect((pos.x + SCRLX, pos.y + SCRLY), (pos.w, pos.h))
+    return pos[0] + SCRLX, pos[1] + SCRLY
+
+def unscroll(pos):
+    if type(pos) == Rect:
+        return Rect((pos.x - SCRLX, pos.y - SCRLY), (pos.w, pos.h))
+    return pos[0] - SCRLX, pos[1] - SCRLY
+
 STATELIST = [
     "ARIAL",
     "ARIALATK0",
@@ -59,6 +72,7 @@ BASE_STATE = {
     "HURTBOXES"  : [],
     "ECB"        : [],
 }
+
 LOG = Surface((256, 1024))
 LOG.fill((150, 150, 150))
 
@@ -69,19 +83,19 @@ def resize(r):
 
 def draw_box(G, surf, rect, col, data={}):
     rect = resize(rect)
-    x, y = rect.x, rect.y
+    x, y = scroll((rect.x, rect.y))
     for key in data.keys():
         surf.blit(G["HEL16"].render("{}:{}".format(key, data[key]), 0, (col)), (x, y))
         y += 16
-    pygame.draw.rect(surf, col, rect, width=1)
+    pygame.draw.rect(surf, col, scroll(rect), width=1)
 
-def drawn_fighter():
+def drawn_fighter(G):
     global FIGHTER, FRAME, STATE
     FIGHTER.state = STATE
     FIGHTER.frame = FRAME
     surf = Surface((FIGHTER.W * 4, FIGHTER.H * 4))
     surf.fill((0, 100, 0))
-    sprite = FIGHTER.get_sprite()
+    sprite = FIGHTER.get_sprite(G)
     for _ in range(2):
         sprite = pygame.transform.scale2x(sprite)
     surf.blit(sprite, (0, 0))
@@ -122,10 +136,10 @@ def expect_click(G, cb=lambda *args: None):
 def draw_grid(G):
     x, y = -1, -1
     while x <= FIGHTER.W * 4:
-        pygame.draw.line(G["SCREEN"], (30, 130, 30), (x, 0), (x, FIGHTER.H * 4))
+        pygame.draw.line(G["SCREEN"], (30, 130, 30), scroll((x, 0)), scroll((x, FIGHTER.H * 4)))
         x += 4
     while y <= FIGHTER.H * 4:
-        pygame.draw.line(G["SCREEN"], (30, 130, 30), (y, 0), (y, FIGHTER.W * 4))
+        pygame.draw.line(G["SCREEN"], (30, 130, 30), scroll((y, 0)), scroll((y, FIGHTER.W * 4)))
         y += 4
 
 def select_from_list(G, list, pos, cb=lambda *args: None):
@@ -188,16 +202,18 @@ def pick_fighter(G):
     return select_from_list(G, ["SWORDIE", "BRAWLER", "SPEEDLE"], (32, 32))
 
 def input_rect(G):
-    G["SCREEN"].blit(G["HEL32"].render("DRAW ECB RECT", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
+    G["SCREEN"].blit(G["HEL32"].render("DRAW RECT", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
     pos, btn = expect_click(G)
+    pos = unscroll(pos)
     def draw_helper(G):
-        pos2 = pygame.mouse.get_pos()
+        pos2 = unscroll(pygame.mouse.get_pos())
         x1 = min(pos[0], pos2[0]) // 4
         x2 = max(pos[0], pos2[0]) // 4
         y1 = min(pos[1], pos2[1]) // 4
         y2 = max(pos[1], pos2[1]) // 4
         draw_box(G, G["SCREEN"], Rect((x1, y1), (x2 - x1, y2 - y1)), (255, 255, 255))
     pos2, btn2 = expect_click(G, draw_helper)
+    pos2 = unscroll(pos2)
     x1 = min(pos[0], pos2[0]) // 4
     x2 = max(pos[0], pos2[0]) // 4
     y1 = min(pos[1], pos2[1]) // 4
@@ -205,6 +221,7 @@ def input_rect(G):
     return (x1, y1), ((x2 - x1), (y2 - y1))
 
 def draw_boxes(G):
+    FIGHTER.update_boxes()
     for ecbox in FIGHTER.ECB:
         draw_box(G, G["SCREEN"], ecbox, COLECB)
     for i, hitbox in enumerate(FIGHTER.hitboxes):
@@ -232,8 +249,13 @@ def delete_box(G):
             draw_box(G, G["SCREEN"], box, col, data={"this":"one"})
     G["SCREEN"].blit(G["HEL32"].render("PICK BOX", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
     box = select_from_list(G, boxes, (G["SCREEN"].get_width() - 256, 0), cb=show_which)
+    if box_type == "HITBOXES":
+        idx = boxes.index(box)
+        FRAME_DATA[FIGHTER._get_move_identifier()][box_type].pop(idx)
+    else:
+        FRAME_DATA[FIGHTER._get_move_identifier()][box_type].remove(((box.x, box.y), (box.w, box.h)))
     boxes.remove(box)
-    FRAME_DATA[FIGHTER._get_move_identifier()][box_type].remove(((box.x, box.y), (box.w, box.h)))
+    
     SAVED = False
     return "removed box at {}".format((box.x, box.y))
 
@@ -241,7 +263,7 @@ def delete_box(G):
 def draw(G):
     G["SCREEN"].fill((200, 200, 250))
     if FIGHTER is not None:
-        G["SCREEN"].blit(drawn_fighter(), (0, 0))
+        G["SCREEN"].blit(drawn_fighter(G), scroll((0, 0)))
         FIGHTER.update_boxes()
         draw_boxes(G)
         move_data = FIGHTER.get_move_data()
@@ -278,7 +300,7 @@ def draw(G):
         G["PRINTER"].save_surface(G["SCREEN"])
 
 def run(G):
-    global FRAME_DATA, SHOW_LOG, FIGHTER, STATE, FRAME, SAVED
+    global FRAME_DATA, SHOW_LOG, FIGHTER, STATE, FRAME, SAVED, SCRLX, SCRLY
     
     while "CHARACTER" not in G or not G["CHARACTER"]:
         G["CHARACTER"] = pick_fighter(G)
@@ -359,7 +381,7 @@ def run(G):
         
         if inp == K_o and mods & KMOD_CTRL:
             if not SAVED:
-                log("Abandon changes? [ENTER]")
+                log(G, "Abandon changes? [ENTER]")
                 inp = expect_input()
                 if inp != K_RETURN: continue
             G["CHARACTER"] = pick_fighter(G)
@@ -369,7 +391,19 @@ def run(G):
             log(G, "Loaded Fighter {}".format(G["CHARACTER"]))
 
         if inp == K_RIGHT:
-            FRAME += 1
+            if mods & KMOD_CTRL:
+                SCRLX += 16
+            else:
+                FRAME += 1
 
         if inp == K_LEFT:
-            FRAME = max(0, FRAME - 1)
+            if mods & KMOD_CTRL:
+                SCRLX -= 16                
+            else:
+                FRAME = max(0, FRAME - 1)
+
+        if inp == K_UP and mods & KMOD_CTRL:
+            SCRLY -= 16
+
+        if inp == K_DOWN and mods & KMOD_CTRL:
+            SCRLY += 16
