@@ -25,6 +25,10 @@ fighter_map = {
             "JUMPSQUAT": ((576, 0), (192, 192)),
             "ARIAL": ((768, 0), (192, 192)),
             "LANDING": ((960, 0), (192, 192)),
+            "GROUNDATK0:1": ((1152, 0), (192, 192)),
+            "GROUNDATK0:4": ((1344, 0), (192, 192)),
+            "GROUNDATK0:12": ((1536, 0), (192, 192)),
+            "GROUNDATK0:18": ((1728, 0), (192, 192)),
         },
         "SSFILENAME": "swordie.png",
         "MSFILENAME": "swordie"
@@ -319,7 +323,7 @@ class Fighter(object):
         if self.state == "ARIAL" and not self.inp["BTN2"]:
             self.can_double_jump = True
 
-        if self.state in ["STAND", "WALK", "DASH"]:
+        if self.state in ["STAND", "WALK", "DASH", "GROUNDATK0", "GROUNDATK1", "DASHATK0", "DASHATK1"]:
             self.X_VEL *= self.traction if abs(self.X_VEL) > 1 else 0
         if self.state in ["STAND", "LANDING", "LANDINGLAG"]:
             self.Y_VEL = 0
