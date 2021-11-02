@@ -9,8 +9,8 @@ HEL16 = pygame.font.SysFont("Helvetica", 16)
 fighter_map = {
     "SWORDIE": {
         "MAXHP": 100,
-        "W": 128,
-        "H": 128,
+        "W": 192,
+        "H": 192,
         "WALKSPEED": 4,
         "DASHSPEED": 8,
         "JUMPSTRENGTH": -16,
@@ -19,12 +19,12 @@ fighter_map = {
         "GRAV": 0.6,
         "TRACTION": 0.9,
         "SPRITESHEET": {
-            "STAND": ((0, 0), (128, 128)),
-            "DASH": ((128, 0), (128, 128)),
-            "WALK": ((256, 0), (128, 128)),
-            "JUMPSQUAT": ((384, 0), (128, 128)),
-            "ARIAL": ((512, 0), (128, 128)),
-            "LAND": ((640, 0), (128, 128)),
+            "STAND": ((0, 0), (192, 192)),
+            "DASH": ((192, 0), (192, 192)),
+            "WALK": ((384, 0), (192, 192)),
+            "JUMPSQUAT": ((576, 0), (192, 192)),
+            "ARIAL": ((768, 0), (192, 192)),
+            "LANDING": ((960, 0), (192, 192)),
         },
         "SSFILENAME": "swordie.png",
         "MSFILENAME": "swordie"
@@ -46,7 +46,7 @@ fighter_map = {
             "WALK": ((256, 0), (128, 128)),
             "JUMPSQUAT": ((384, 0), (128, 128)),
             "ARIAL": ((512, 0), (128, 128)),
-            "LAND": ((640, 0), (128, 128)),
+            "LANDING": ((640, 0), (128, 128)),
         },
         "SSFILENAME": "brawler.png",
         "MSFILENAME": "brawler"
@@ -68,7 +68,7 @@ fighter_map = {
             "WALK": ((256, 0), (128, 128)),
             "JUMPSQUAT": ((384, 0), (128, 128)),
             "ARIAL": ((512, 0), (128, 128)),
-            "LAND": ((640, 0), (128, 128)),
+            "LANDING": ((640, 0), (128, 128)),
         },
         "SSFILENAME": "speedle.png",
         "MSFILENAME": "speedle"
@@ -159,7 +159,7 @@ class Fighter(object):
     def get_move_data(self):
         name = self._get_move_identifier()
         return self.data[name] if name is not None else {
-            "ACTIONABLE":[],"HITBOXES":[],"HURTBOXES":[],"ECB":[((0, 112), (128, 16))]
+            "ACTIONABLE":[],"HITBOXES":[],"HURTBOXES":[],"ECB":[]
         }
 
     def update_boxes(self):

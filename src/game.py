@@ -12,8 +12,11 @@ import sys
 
 W, H = 800, 640
 
-def set_up():
+def set_up(vis=False):
+    global W, H
     G = {}
+    if vis:
+        W, H = 1200, 1000
     if "-f" in sys.argv:
         G["SCREEN"] = pygame.display.set_mode((W, H), FULLSCREEN)
     else:

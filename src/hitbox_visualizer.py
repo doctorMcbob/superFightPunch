@@ -216,13 +216,15 @@ def delete_box(G):
     global SAVED, FIGHTER
     G["SCREEN"].blit(G["HEL32"].render("TYPE TO REMOVE", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
     box_type = select_from_list(G, ["HITBOXES", "HURTBOXES", "ECB"], (G["SCREEN"].get_width() - 256, 0))
+    boxes = []
     if box_type == "ECB":
         boxes = FIGHTER.ECB
     elif box_type == "HITBOXES":
         boxes = FIGHTER.hitboxes
     elif box_type == "HURTBOXES":
         boxes = FIGHTER.hurtboxes
-    else: return "no boxes deleted"
+    if not boxes:
+        return "no boxes deleted"
     draw(G)
     def show_which(G, idx):
         for i, box in enumerate(boxes):
@@ -314,7 +316,7 @@ def run(G):
         if inp == K_e and mods & KMOD_SHIFT:
             pos, dim = input_rect(G)
             FIGHTER.ECB.append(Rect(pos, dim))
-            FRAME_DATA["{}:{}".format(STATE, FRAME)]["ECB"].append((pos, dim))
+            FRAME_DATA[FIGHTER._get_move_identifier()]["ECB"].append((pos, dim))
             log(G, "  {}".format((pos, dim)))
             log(G, "Added new ECBox")
             SAVED = False
@@ -322,7 +324,7 @@ def run(G):
         if inp == K_u and mods & KMOD_SHIFT:
             pos, dim = input_rect(G)
             FIGHTER.hurtboxes.append(Rect(pos, dim))
-            FRAME_DATA["{}:{}".format(STATE, FRAME)]["HURTBOXES"].append((pos, dim))
+            FRAME_DATA[FIGHTER._get_move_identifier()]["HURTBOXES"].append((pos, dim))
             log(G, "  {}".format((pos, dim)))
             log(G, "Added new HURTBOX")
             SAVED = False
@@ -333,7 +335,7 @@ def run(G):
             hitbox["RECT"] = (pos, dim)
             FIGHTER.hitboxes.append(Rect(pos, dim))
             FIGHTER.hitbox_data.append(hitbox)
-            FRAME_DATA["{}:{}".format(STATE, FRAME)]["HITBOXES"].append(hitbox)
+            FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"].append(hitbox)
             log(G, "  {}".format((pos, dim)))
             log(G, "Added new HITBOX")
             SAVED = False
@@ -349,7 +351,9 @@ def run(G):
                 SAVED = False
                 log(G, "Added new state")
 
-
+        if inp == K_d and mods & KMOD_SHIFT:
+            log(G, delete_box(G))
+        
         if inp == K_s and mods & KMOD_CTRL:
             log(G, save_moves(FRAME_DATA))
         
