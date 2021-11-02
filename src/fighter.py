@@ -199,13 +199,16 @@ class Fighter(object):
 
 
     def check_collision(self, enemy):
-        priority_hitbox = {"PRIO": 100, "HITSTUN": 0, "HITLAG": 0}
+        priority_hitbox = None
         for hurtbox in self.hurtboxes:
             for hitbox in hurtbox.collidelistall(enemy.hitboxes):
-                data = enemy.hitbox_data[enemy.hitboxes.index(hitbox)]
-                priority_hitbox = data if data["PRIO"] < priority_hitbox["PRIO"] else priority_hitbox
-        self.hitstun = priority_hitbox["HITSTUN"]
-        self.hitlag = priority_hitbox["HITLAG"]
+                data = enemy.hitbox_data[hitbox]
+                priority_hitbox = data if priority_hitbox is None or data["PRIO"] < priority_hitbox["PRIO"] else priority_hitbox
+
+        print(priority_hitbox)
+        if priority_hitbox is not None:
+            self.hitstun = priority_hitbox["HITSTUN"]
+            self.hitlag = priority_hitbox["HITLAG"]
 
     def _check_floor(self, floor):
         lowest = None
