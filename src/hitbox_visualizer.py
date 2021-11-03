@@ -56,6 +56,8 @@ ALPHABET_KEY_MAP = {
     K_0: "0", K_1: "1", K_2: "2", K_3: "3", K_4: "4",
     K_5: "5", K_6: "6", K_7: "7", K_8: "8", K_9: "9",
     K_PLUS: "+", K_MINUS: "-", K_COLON: ":",
+    K_LEFTPAREN: "(", K_RIGHTPAREN: ")",
+    K_ASTERISK: "*", K_SLASH: "/"
 }
 
 BASE_HITBOX = {
@@ -180,6 +182,41 @@ def get_text_input(G, pos):
         elif inp in ALPHABET_KEY_MAP:
             string = string + ALPHABET_KEY_MAP[inp]
 
+def update_dict(G, data, pos):
+    surf = Surface((640, 480))
+    SLOT = 0
+    keys = list(data.keys())
+    while True:
+        surf.fill((200, 200 , 255))
+        y = 32
+        surf.blit(G["HEL32"].render("{", 0, (150, 0, 0)), (32, y))
+        for i, key in enumerate(keys):
+            col = (150, 0, 0) if SLOT != i else (150, 150, 220)
+            y += 32
+            surf.blit(G["HEL32"].render("{}".format(key), 0, col), (64, y))        
+            surf.blit(G["HEL32"].render(": {}".format(data[key]), 0, col), (256, y))        
+        if SLOT == len(keys):
+            y += 32
+            surf.blit(G["HEL32"].render("[+]", 0, (150, 150, 220)), (64, y))        
+        y += 32
+        surf.blit(G["HEL32"].render("}", 0, (150, 0, 0)), (32, y))
+
+        G["SCREEN"].blit(surf, pos)
+        inp = expect_input()
+        
+        if inp == K_ESCAPE: return
+        if inp == K_UP: SLOT = max(0, SLOT - 1)
+        if inp == K_DOWN: SLOT = min(len(keys), SLOT + 1)
+        if inp in [K_RETURN, K_SPACE] and SLOT < len(keys):
+            key = keys[SLOT]
+            text = get_text_input(G, (272, 32 * (keys.index(key) + 2)))
+            try:
+                data[key] = eval(text)
+            except Exception as e:
+                surf.blit(G["HEL32"].render("[ENTER] {}".format(repr(e)), 0, (150, 0, 0)), (32, 0))
+                G["SCREEN"].blit(surf, pos)
+                expect_input([K_RETURN])
+
 def load_moves(fighter):
     global SAVED
     SAVED = True
@@ -229,6 +266,27 @@ def draw_boxes(G):
     for hurtbox in FIGHTER.hurtboxes:
         draw_box(G, G["SCREEN"], hurtbox, COLHRT)
 
+def pick_box(G, boxes):
+    draw(G)
+    def show_which(G, idx):
+        for i, box in enumerate(boxes):
+            col = (0, 0, 0) if i != idx else (255, 0, 0)
+            draw_box(G, G["SCREEN"], box, col, data={"this":"one"})
+    G["SCREEN"].blit(G["HEL32"].render("PICK BOX", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
+    return select_from_list(G, boxes, (G["SCREEN"].get_width() - 256, 0), cb=show_which)
+
+def update_hitbox(G):
+    boxes = FIGHTER.hitboxes
+    if not boxes return "No hitboxes"
+    box = pick_box(G, boxes)
+    data = deepcopy(FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"][boxes.index(box)])
+    update_dict(G, data, (0, 0))
+    if box not in boxes:
+        return "No changes"
+    FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"][boxes.index(box)] = data
+    SAVED = False
+    return "Updated hitbox at {}".format((box.x, box.y))
+
 def delete_box(G):
     global SAVED, FIGHTER
     G["SCREEN"].blit(G["HEL32"].render("TYPE TO REMOVE", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
@@ -242,23 +300,15 @@ def delete_box(G):
         boxes = FIGHTER.hurtboxes
     if not boxes:
         return "no boxes deleted"
-    draw(G)
-    def show_which(G, idx):
-        for i, box in enumerate(boxes):
-            col = (0, 0, 0) if i != idx else (255, 0, 0)
-            draw_box(G, G["SCREEN"], box, col, data={"this":"one"})
-    G["SCREEN"].blit(G["HEL32"].render("PICK BOX", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
-    box = select_from_list(G, boxes, (G["SCREEN"].get_width() - 256, 0), cb=show_which)
+    box = pick_box(G, boxes)
     if box_type == "HITBOXES":
         idx = boxes.index(box)
         FRAME_DATA[FIGHTER._get_move_identifier()][box_type].pop(idx)
     else:
         FRAME_DATA[FIGHTER._get_move_identifier()][box_type].remove(((box.x, box.y), (box.w, box.h)))
     boxes.remove(box)
-    
     SAVED = False
     return "removed box at {}".format((box.x, box.y))
-
 
 def draw(G):
     G["SCREEN"].fill((200, 200, 250))
@@ -375,10 +425,13 @@ def run(G):
 
         if inp == K_d and mods & KMOD_SHIFT:
             log(G, delete_box(G))
-        
+
+        if inp == K_f and mods & KMOD_SHIFT:
+            log(G, update_hitbox(G))
+
         if inp == K_s and mods & KMOD_CTRL:
             log(G, save_moves(FRAME_DATA))
-        
+
         if inp == K_o and mods & KMOD_CTRL:
             if not SAVED:
                 log(G, "Abandon changes? [ENTER]")
