@@ -120,9 +120,11 @@ class Fighter(object):
         self.X_VEL = 0
         self.Y_VEL = 0
 
-        self.knockback = (0, 0) # velocity mod
-        self.hitstun = 0
+        self.strikelag = 0
         self.hitlag = 0
+        self.hitstun = 0
+        self.knockback_angle = (0, 0) # velocity mod
+        self.knockback_strength = 0
         
         self.combo = 0
 
@@ -208,6 +210,9 @@ class Fighter(object):
         if priority_hitbox is not None:
             self.hitstun = priority_hitbox["HITSTUN"]
             self.hitlag = priority_hitbox["HITLAG"]
+            self.knockback_angle = priority_hitbox["ANGLE"][0] * enemy.direction, priority_hitbox["ANGLE"][1]
+            self.knockback_strength = priority_hitbox["STRENGTH"]
+            enemy.strikelag = priority_hitbox["HITLAG"]
 
     def _check_floor(self, floor):
         lowest = None
@@ -233,10 +238,13 @@ class Fighter(object):
         floor = stage["HEIGHT"]
 
         collision, offset = self._check_plats(plats) or self._check_floor(floor)
-        if collision and self.state in ["ARIAL", "ARIALATK0", "ARIALATK1"]:
+        if collision and self.state in ["ARIAL", "ARIALATK0", "ARIALATK1", "HITSTUN"]:
             self.has_double_jump = True
             self.Y = offset - self.H
-            if "LANDINGLAG" in move_data["ACTIONABLE"]:
+            if self.state == "HITSTUN":
+                self.state = "HITLAND"
+                self.landing_lag = self.hitstun
+            elif "LANDINGLAG" in move_data["ACTIONABLE"]:
                 self.state = "LANDINGLAG"
                 self.landing_lag = move_data["LANDINGLAG"]
             else:
@@ -277,8 +285,13 @@ class Fighter(object):
         move_data = self.get_move_data()
         state = self.state
 
+        if self.strikelag: return
+        if self.hitlag:
+            self.state = "HITLAG"
+        elif self.state != "HITLAND" and self.hitstun:
+            self.state = "HITSTUN"
         # JUMP FUNCTIONALITY
-        if self.inp["BTN2"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
+        elif self.inp["BTN2"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
             self.state = "JUMPSQUAT"
         elif self.inp["BTN2"] and "DOUBLEJUMP" in move_data["ACTIONABLE"] and self.has_double_jump and self.can_double_jump:
             self.state = "DOUBLEJUMP"
@@ -313,7 +326,7 @@ class Fighter(object):
         elif self.inp["BTN1"] and "DASHATK1" in move_data["ACTIONABLE"]:
             self.state = "DASHATK1"
 
-        elif self.state == "LANDING" or self.state == "LANDINGLAG":
+        elif self.state in ["LANDING", "LANDINGLAG" , "HITLAND"]:
             if self.landing_lag == 0:
                 self.state = "STAND"
             self.landing_lag -= 1
@@ -331,6 +344,28 @@ class Fighter(object):
         
     def apply_state(self, G):
         d = self._dir_as_tuple()
+        if self.strikelag:
+            self.strikelag -= 1
+            return
+        if self.state == "HITLAG":
+            if self.frame == 0:
+                self.HP -= self.knockback_strength
+                self.X_VEL, self.Y_VEL = 0, 0
+            self.hitlag -= 1
+            return
+        if self.state in ["HITSTUN", "HITLAND"]:
+            self.hitstun -= 1
+            if self.frame == 0:
+                if self.state == "HITSTUN":
+                    self.X_VEL = self.knockback_strength * self.knockback_angle[0] * (self.combo + 1)
+                    self.Y_VEL = 0 - self.knockback_strength * self.knockback_angle[1] * (self.combo + 1)
+            if self.state == "HITSTUN":
+                self.Y_VEL += self.grav
+            else:
+                self.Y_VEL = 0
+            if self.hitstun == 0:
+                self.state = "ARIAL" if self.state == "HITSTUN" else "STAND"
+            return
         if self.state in ["STAND", "WALK"]:
             self.platform_drop = self.inp["DOWN"] and self.inp["BTN2"]
             self.direction = d[0] if d[0] else self.direction
@@ -391,14 +426,14 @@ class Fighter(object):
         self.update_state()
         self.apply_state(G)
 
-        self.X += self.X_VEL
-        self.Y += self.Y_VEL
-        self.X = int(self.X)
-        self.Y = int(self.Y)
+        if not self.strikelag:
+            self.X += self.X_VEL
+            self.Y += self.Y_VEL
+            self.X = int(self.X)
+            self.Y = int(self.Y)
 
-        self.update_boxes()
-
-        self.frame = min(self.frame + 1, 500)
+            self.update_boxes()
+            self.frame = min(self.frame + 1, 500)
 
     def DEBUG(self, G):
         x = 0 if G["P1"]["ACTIVE"] is self else 512
@@ -411,15 +446,22 @@ class Fighter(object):
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("X VEL:{} Y VEL: {}".format(self.X_VEL, self.Y_VEL), 0, (80, 0, 0)), (x, y))
         y += 16
+        G["SCREEN"].blit(G["HEL16"].render("HITLAG: {}".format(self.hitlag), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("STRIKELAG: {}".format(self.strikelag), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("HITSTUN: {}".format(self.hitstun), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("KB ANGLE: {}".format(self.knockback_angle), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("KB STR: {}".format(self.knockback_strength), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("PLAT DROP: {}".format(self.platform_drop), 0, (80, 0, 0)), (x, y))
+        y += 16
+        G["SCREEN"].blit(G["HEL16"].render("ON LAND: {}".format(self._on_land(G)), 0, (80, 0, 0)), (x, y))
+        y += 16
         G["SCREEN"].blit(G["HEL16"].render("--INPUTS--", 0, (80, 0, 0)), (x, y))
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("L:{LEFT} U:{UP} R:{RIGHT} D:{DOWN}".format(**self.inp), 0, (80, 0, 0)), (x, y))
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("A:{BTN0} B:{BTN1} X:{BTN2} Y:{BTN3}".format(**self.inp), 0, (80, 0, 0)), (x, y))
-        y += 16
-        G["SCREEN"].blit(G["HEL16"].render("HITSTUN: {}".format(self.hitstun), 0, (80, 0, 0)), (x, y))
-        y += 16
-        G["SCREEN"].blit(G["HEL16"].render("PLAT DROP: {}".format(self.platform_drop), 0, (80, 0, 0)), (x, y))
-        y += 16
-        G["SCREEN"].blit(G["HEL16"].render("ON LAND: {}".format(self._on_land(G)), 0, (80, 0, 0)), (x, y))
-        

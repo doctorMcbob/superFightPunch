@@ -43,7 +43,10 @@ STATELIST = [
     "DASHATK1",
     "JUMPSQUAT",
     "LANDING",
+    "HITLAND",
     "LANDINGLAG",
+    "HITSTUN",
+    "HITLAG",
 ]
 
 ALPHABET_KEY_MAP = {
@@ -68,7 +71,8 @@ BASE_HITBOX = {
     "PRIO"       : 100,
     "HITSTUN"    : 0,
     "HITLAG"     : 0,
-    "DIRECTION"  : (0, 1),
+    "ANGLE"      : (0, 1),
+    "STRENGTH"   : 2,
     "RECT"       : None,
 }
 
@@ -189,10 +193,15 @@ def get_text_input(G, pos):
             string = string + ALPHABET_KEY_MAP[inp]
 
 def update_dict(G, data, pos):
+    if "DIRECTION" in data:
+        data["ANGLE"] = data.pop("DIRECTION")
+    if "STRENGTH" not in data:
+        data["STRENGTH"] = 2
+
     surf = Surface((640, 480))
     SLOT = 0
-    keys = list(data.keys())
     while True:
+        keys = list(data.keys())
         surf.fill((200, 200 , 255))
         y = 32
         surf.blit(G["HEL32"].render("{", 0, (150, 0, 0)), (32, y))
@@ -213,9 +222,27 @@ def update_dict(G, data, pos):
         if inp == K_ESCAPE: return
         if inp == K_UP: SLOT = max(0, SLOT - 1)
         if inp == K_DOWN: SLOT = min(len(keys), SLOT + 1)
-        if inp in [K_RETURN, K_SPACE] and SLOT < len(keys):
+
+        if inp in [K_RETURN, K_SPACE] and SLOT < len(keys) and pygame.key.get_mods() & KMOD_SHIFT:
+            key = keys[SLOT]
+            new_key = get_text_input(G, (64, 32 * (keys.index(key) + 2)))
+            data[new_key] = data.pop(key)
+
+        elif inp in [K_RETURN, K_SPACE] and SLOT < len(keys):
             key = keys[SLOT]
             text = get_text_input(G, (272, 32 * (keys.index(key) + 2)))
+            try:
+                data[key] = eval(text)
+            except Exception as e:
+                surf.blit(G["HEL32"].render("[ENTER] {}".format(repr(e)), 0, (150, 0, 0)), (32, 0))
+                G["SCREEN"].blit(surf, pos)
+                expect_input([K_RETURN])
+
+        if inp in [K_RETURN, K_SPACE] and SLOT == len(keys):
+            key = get_text_input(G, (64, 32 * (len(keys) + 2)))
+            if not key: continue
+            text = get_text_input(G, (272, 32 * (len(keys) + 2)))
+            if not text: continue
             try:
                 data[key] = eval(text)
             except Exception as e:
@@ -285,6 +312,7 @@ def update_hitbox(G):
     boxes = FIGHTER.hitboxes
     if not boxes: return "No hitboxes"
     box = pick_box(G, boxes)
+    if not box: return "No box selected"
     data = deepcopy(FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"][boxes.index(box)])
     update_dict(G, data, (0, 0))
     if box not in boxes:
