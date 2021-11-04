@@ -29,6 +29,9 @@ fighter_map = {
             "GROUNDATK0:4": ((1344, 0), (192, 192)),
             "GROUNDATK0:12": ((1536, 0), (192, 192)),
             "GROUNDATK0:18": ((1728, 0), (192, 192)),
+            "HITLAG": ((1920, 0), (192, 192)),
+            "HITSTUN" :((2112, 0), (192, 192)),
+            "HITLAND": ((2304, 0), (192, 192)),
         },
         "SSFILENAME": "swordie.png",
         "MSFILENAME": "swordie"
