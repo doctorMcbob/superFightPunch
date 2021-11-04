@@ -55,9 +55,13 @@ ALPHABET_KEY_MAP = {
     K_z: "z", K_SPACE: " ", K_UNDERSCORE: "_",
     K_0: "0", K_1: "1", K_2: "2", K_3: "3", K_4: "4",
     K_5: "5", K_6: "6", K_7: "7", K_8: "8", K_9: "9",
-    K_PLUS: "+", K_MINUS: "-", K_COLON: ":",
-    K_LEFTPAREN: "(", K_RIGHTPAREN: ")",
+    K_PLUS: "+", K_MINUS: "-", K_COLON: ":", K_PERIOD:".",
+    K_LEFTPAREN: "(", K_RIGHTPAREN: ")", K_COMMA: ",",
     K_ASTERISK: "*", K_SLASH: "/"
+}
+ALPHABET_SHIFT_MAP = {
+    K_0: ")", K_1: "!", K_2: "@", K_3: "#", K_4: "$",
+    K_5: "%", K_6: "^", K_7: "&", K_8: "*", K_9: "(",
 }
 
 BASE_HITBOX = {
@@ -177,7 +181,9 @@ def get_text_input(G, pos):
         if inp == K_RETURN: return string
         
         if pygame.key.get_mods() & KMOD_SHIFT:
-            if inp in ALPHABET_KEY_MAP:
+            if inp in ALPHABET_SHIFT_MAP:
+                string = string + ALPHABET_SHIFT_MAP[inp]
+            elif inp in ALPHABET_KEY_MAP:
                 string = string + ALPHABET_KEY_MAP[inp].upper()
         elif inp in ALPHABET_KEY_MAP:
             string = string + ALPHABET_KEY_MAP[inp]
@@ -277,7 +283,7 @@ def pick_box(G, boxes):
 
 def update_hitbox(G):
     boxes = FIGHTER.hitboxes
-    if not boxes return "No hitboxes"
+    if not boxes: return "No hitboxes"
     box = pick_box(G, boxes)
     data = deepcopy(FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"][boxes.index(box)])
     update_dict(G, data, (0, 0))
