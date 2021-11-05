@@ -132,9 +132,7 @@ def expect_input(expectlist=[]):
 
 def expect_click(G, cb=lambda *args: None):
     while True:
-        mpos = pygame.mouse.get_pos()
         cb(G)
-        G["SCREEN"].blit(G["HEL16"].render("{}".format((mpos[0] // 4, mpos[1] // 4)), 0, (0, 0, 0)), mpos)
         pygame.display.update()
         for e in pygame.event.get():
             if e.type == QUIT and SAVED: quit()
@@ -253,7 +251,7 @@ def update_dict(G, data, pos):
 
         if inp == K_a:
             ang = pick_angle(G, (256, 256))
-            if ang: data[keys[SLOT]] = ang
+            if ang: data["ANGLE"] = ang
 
         if inp in [K_RETURN, K_SPACE] and SLOT < len(keys) and pygame.key.get_mods() & KMOD_SHIFT:
             key = keys[SLOT]
@@ -305,17 +303,17 @@ def pick_fighter(G):
 
 def input_rect(G):
     G["SCREEN"].blit(G["HEL32"].render("DRAW RECT", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
-    def draw_helper(G):
+    def draw_helper_(G):
         draw(G)
         draw_grid(G)
         draw_boxes(G)
-    pos, btn = expect_click(G, cb=draw_helper)
+        mpos = pygame.mouse.get_pos()
+        G["SCREEN"].blit(G["HEL16"].render("{}".format((mpos[0] // 4, mpos[1] // 4)), 0, (0, 0, 0)), mpos)
+    pos, btn = expect_click(G, cb=draw_helper_)
     if not pos: return None
     pos = unscroll(pos)
     def draw_helper(G):
-        draw(G)
-        draw_grid(G)
-        draw_boxes(G)
+        draw_helper_(G)
         pos2 = unscroll(pygame.mouse.get_pos())
         x1 = min(pos[0], pos2[0]) // 4
         x2 = max(pos[0], pos2[0]) // 4
