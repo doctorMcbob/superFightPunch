@@ -1,4 +1,5 @@
 from copy import deepcopy
+from math import cos, sin, atan, radians, degrees
 
 import pygame
 from pygame import Surface, Rect
@@ -132,14 +133,12 @@ def expect_input(expectlist=[]):
 def expect_click(G, cb=lambda *args: None):
     while True:
         mpos = pygame.mouse.get_pos()
-        draw(G)
-        draw_grid(G)
-        draw_boxes(G)
         cb(G)
         G["SCREEN"].blit(G["HEL16"].render("{}".format((mpos[0] // 4, mpos[1] // 4)), 0, (0, 0, 0)), mpos)
         pygame.display.update()
         for e in pygame.event.get():
             if e.type == QUIT and SAVED: quit()
+            if e.type == KEYDOWN and e.key == K_ESCAPE: return None, None
             if e.type == MOUSEBUTTONDOWN:
                 return e.pos, e.button
 
@@ -151,6 +150,40 @@ def draw_grid(G):
     while y <= FIGHTER.H * 4:
         pygame.draw.line(G["SCREEN"], (30, 130, 30), scroll((y, 0)), scroll((y, FIGHTER.W * 4)))
         y += 4
+
+def pick_angle(G, pos):
+    deg = [0]
+    def drangle(G):
+        pos1 = pos[0] + 64, pos[1] + 64
+        pos2 = pygame.mouse.get_pos()
+        deg[0] = get_angle(pos1, pos2)
+        G["SCREEN"].blit(visualized_angle(deg[0]), pos)
+    pos, btn = expect_click(G, cb=drangle)
+    return pos_from_angle(deg[0]) if pos else pos
+
+def get_angle(pos1, pos2):
+    x1, y1 = pos1
+    x2, y2 = pos2
+    if x1 == x2: return 90 if y1 < y2 else 270
+    if y1 == y2: return 0
+    a = y1 - y2
+    b = x1 - x2
+
+    deg = degrees(atan(a / b)) + (180 * (b > 0))
+    if deg < 0: deg += 360
+    return deg
+
+def visualized_angle(deg):
+    x, y = pos_from_angle(deg)
+    surf = Surface((128, 128))
+    surf.fill((255, 255, 255))
+    pygame.draw.circle(surf, (0, 0, 0), (64, 64), 64, width=4)
+    pygame.draw.line(surf, (255, 0, 0), (64, 64), (64+64*x, 64+64*y), width=4)
+    return surf
+
+def pos_from_angle(deg):
+    deg = radians(deg)
+    return cos(deg), sin(deg)
 
 def select_from_list(G, list, pos, cb=lambda *args: None):
     idx = 0
@@ -193,11 +226,6 @@ def get_text_input(G, pos):
             string = string + ALPHABET_KEY_MAP[inp]
 
 def update_dict(G, data, pos):
-    if "DIRECTION" in data:
-        data["ANGLE"] = data.pop("DIRECTION")
-    if "STRENGTH" not in data:
-        data["STRENGTH"] = 2
-
     surf = Surface((640, 480))
     SLOT = 0
     while True:
@@ -222,6 +250,10 @@ def update_dict(G, data, pos):
         if inp == K_ESCAPE: return
         if inp == K_UP: SLOT = max(0, SLOT - 1)
         if inp == K_DOWN: SLOT = min(len(keys), SLOT + 1)
+
+        if inp == K_a:
+            ang = pick_angle(G, (256, 256))
+            if ang: data[keys[SLOT]] = ang
 
         if inp in [K_RETURN, K_SPACE] and SLOT < len(keys) and pygame.key.get_mods() & KMOD_SHIFT:
             key = keys[SLOT]
@@ -273,9 +305,17 @@ def pick_fighter(G):
 
 def input_rect(G):
     G["SCREEN"].blit(G["HEL32"].render("DRAW RECT", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
-    pos, btn = expect_click(G)
+    def draw_helper(G):
+        draw(G)
+        draw_grid(G)
+        draw_boxes(G)
+    pos, btn = expect_click(G, cb=draw_helper)
+    if not pos: return None
     pos = unscroll(pos)
     def draw_helper(G):
+        draw(G)
+        draw_grid(G)
+        draw_boxes(G)
         pos2 = unscroll(pygame.mouse.get_pos())
         x1 = min(pos[0], pos2[0]) // 4
         x2 = max(pos[0], pos2[0]) // 4
@@ -283,6 +323,7 @@ def input_rect(G):
         y2 = max(pos[1], pos2[1]) // 4
         draw_box(G, G["SCREEN"], Rect((x1, y1), (x2 - x1, y2 - y1)), (255, 255, 255))
     pos2, btn2 = expect_click(G, draw_helper)
+    if not pos2: return None
     pos2 = unscroll(pos2)
     x1 = min(pos[0], pos2[0]) // 4
     x2 = max(pos[0], pos2[0]) // 4
@@ -420,7 +461,9 @@ def run(G):
                 SAVED = False
 
         if inp == K_e and mods & KMOD_SHIFT:
-            pos, dim = input_rect(G)
+            rect = input_rect(G)
+            if not rect: continue
+            pos, dim = rect
             FIGHTER.ECB.append(Rect(pos, dim))
             FRAME_DATA[FIGHTER._get_move_identifier()]["ECB"].append((pos, dim))
             log(G, "  {}".format((pos, dim)))
@@ -428,7 +471,9 @@ def run(G):
             SAVED = False
 
         if inp == K_u and mods & KMOD_SHIFT:
-            pos, dim = input_rect(G)
+            rect = input_rect(G)
+            if not rect: continue
+            pos, dim = rect
             FIGHTER.hurtboxes.append(Rect(pos, dim))
             FRAME_DATA[FIGHTER._get_move_identifier()]["HURTBOXES"].append((pos, dim))
             log(G, "  {}".format((pos, dim)))
@@ -436,7 +481,9 @@ def run(G):
             SAVED = False
         
         if inp == K_h and mods & KMOD_SHIFT:
-            pos, dim = input_rect(G)
+            rect = input_rect(G)
+            if not rect: continue
+            pos, dim = rect
             hitbox = deepcopy(BASE_HITBOX)
             hitbox["RECT"] = (pos, dim)
             FIGHTER.hitboxes.append(Rect(pos, dim))
