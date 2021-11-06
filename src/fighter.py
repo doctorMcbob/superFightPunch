@@ -180,6 +180,12 @@ class Fighter(object):
         r -= x + w
         return (r, y), dim
 
+    def get_hitbox_data(self, box):
+        x, y, w, h = box.x, box.y, box.w, box.h
+        for hitbox in self.hitbox_data:
+            if ((x, y), (w, h)) in hitbox["RECTS"]: return hitbox
+        return None
+
     def update_boxes(self):
         move_data = self.get_move_data()
         self.hitboxes = []
@@ -187,10 +193,12 @@ class Fighter(object):
         self.ECB = []
         self.hurtboxes = []
         
+        self.hitbox_data = move_data["HITBOXES"]
+
         for hitbox in move_data["HITBOXES"]:
-            self.hitbox_data.append(hitbox)
-            hitbox = self.flip_rect(hitbox["RECT"]) if self.direction < 0 else hitbox["RECT"]
-            self.hitboxes.append(Rect(hitbox[0][0] + self.X, hitbox[0][1] + self.Y, hitbox[1][0], hitbox[1][1]))
+            for rect in hitbox["RECTS"]:
+                box = self.flip_rect(rect) if self.direction < 0 else rect
+                self.hitboxes.append(Rect(box[0][0] + self.X, box[0][1] + self.Y, box[1][0], box[1][1]))
 
         for hurtbox in move_data["HURTBOXES"]:
             if self.direction < 0:
@@ -257,7 +265,7 @@ class Fighter(object):
     def draw_boxes(self, G, surf):
         for ecbox in self.ECB:
             pygame.draw.rect(surf, (0, 0, 255), G["SCROLL"](ecbox), width=1)
-        for i, hitbox in enumerate(self.hitboxes):
+        for hitbox in self.hitboxes:
             pygame.draw.rect(surf, (255, 0, 0), G["SCROLL"](hitbox), width=1)
         for hurtbox in self.hurtboxes:
             pygame.draw.rect(surf, (0, 155, 0), G["SCROLL"](hurtbox), width=1)
