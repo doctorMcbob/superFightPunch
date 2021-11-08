@@ -101,7 +101,7 @@ BASE_HITBOX = {
     "HITLAG"     : 0,
     "ANGLE"      : (0, 1),
     "STRENGTH"   : 2,
-    "RECT"       : None,
+    "RECTS"       : [],
 }
 
 BASE_STATE = {
@@ -360,8 +360,9 @@ def draw_boxes(G):
     FIGHTER.update_boxes()
     for ecbox in FIGHTER.ECB:
         draw_box(G, G["SCREEN"], ecbox, COLECB)
-    for i, hitbox in enumerate(FIGHTER.hitboxes):
-        draw_box(G, G["SCREEN"], hitbox, COLHIT, data=FIGHTER.hitbox_data[i])
+    for hitbox in FIGHTER.hitboxes:
+        hitbox_data = FIGHTER.get_hitbox_data(hitbox)
+        draw_box(G, G["SCREEN"], hitbox, COLHIT, data={"id": FIGHTER.hitbox_data.index(hitbox_data)})
     for hurtbox in FIGHTER.hurtboxes:
         draw_box(G, G["SCREEN"], hurtbox, COLHRT)
 
@@ -373,6 +374,22 @@ def pick_box(G, boxes):
             draw_box(G, G["SCREEN"], box, col, data={"this":"one"})
     G["SCREEN"].blit(G["HEL32"].render("PICK BOX", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
     return select_from_list(G, boxes, (G["SCREEN"].get_width() - 256, 0), cb=show_which)
+
+def draw_hitbox_icon(G, pos, data, name=""):
+    surf = Surface((256, 128))
+    surf.fill((100, 0, 0))
+    pygame.draw.rect(surf, (255, 100, 100), Rect((16, 16), (256 - 32, 128 - 32)))
+    x, y = 16, 32
+    keys_to_draw = ["PRIO", "STRENGTH", "HITSTUN", "HITLAG"]
+    surf.blit(G["HEL16"].render("{}".format(name), (120, 80, 80), 0), (16, 16))
+    for key in keys_to_draw:
+        surf.blit(G["HEL16"].render("{}:{}".format(key, data[key]), (120, 80, 80), 0), (x, y))
+        y += 16
+        if y == 256 - 16:
+            x += 16
+            y = 16
+    surf.blit(visualized_angle(get_angle((0, 0), data["ANGLE"])), (128, 0))
+    G["SCREEN"].blit(surf, pos)
 
 def update_hitbox(G):
     boxes = FIGHTER.hitboxes
@@ -424,23 +441,10 @@ def draw(G):
         G["SCREEN"].blit(G["HEL16"].render("ACTIONABLE:", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256, y))
         y += 16
         G["SCREEN"].blit(G["HEL16"].render("{}".format(move_data["ACTIONABLE"]), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 + 32, y))
-    
         y += 16
-        G["SCREEN"].blit(G["HEL16"].render("ECB", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256, y))
-        for ecbox in FRAME_DATA[FIGHTER._get_move_identifier()]["ECB"]:
-            y += 16
-            G["SCREEN"].blit(G["HEL16"].render("{}".format(ecbox), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 + 32, y))
-        y += 16
-        G["SCREEN"].blit(G["HEL16"].render("HURTBOXES", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256, y))
-        for hurtbox in FRAME_DATA[FIGHTER._get_move_identifier()]["HURTBOXES"]:
-            y += 16
-            G["SCREEN"].blit(G["HEL16"].render("{}".format(hurtbox), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 + 32, y))
-        y += 16
-        G["SCREEN"].blit(G["HEL16"].render("HITBOX", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256, y))
-        for hitbox in FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"]:
-            y += 16
-            G["SCREEN"].blit(G["HEL16"].render("{}".format(hitbox), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 + 32, y))
-
+        for i, hitbox in enumerate(FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"]):
+            draw_hitbox_icon(G, (G["SCREEN"].get_width() - 256, y), hitbox, name=i)
+            y += 128
     if SHOW_LOG:
         G["SCREEN"].blit(LOG, (G["W"] - 256, 0))
     else:
