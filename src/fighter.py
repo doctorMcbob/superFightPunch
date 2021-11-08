@@ -183,7 +183,8 @@ class Fighter(object):
     def get_hitbox_data(self, box):
         x, y, w, h = box.x, box.y, box.w, box.h
         for hitbox in self.hitbox_data:
-            if ((x, y), (w, h)) in hitbox["RECTS"]: return hitbox
+            if ((x-self.X, y-self.Y), (w, h)) in hitbox["RECTS"]: return hitbox
+            if self.flip_rect(((x-self.X, y-self.Y), (w, h))) in hitbox["RECTS"]: return hitbox
         return None
 
     def update_boxes(self):
@@ -215,7 +216,7 @@ class Fighter(object):
         priority_hitbox = None
         for hurtbox in self.hurtboxes:
             for hitbox in hurtbox.collidelistall(enemy.hitboxes):
-                data = enemy.hitbox_data[hitbox]
+                data = enemy.get_hitbox_data(enemy.hitboxes[hitbox])
                 priority_hitbox = data if priority_hitbox is None or data["PRIO"] > priority_hitbox["PRIO"] else priority_hitbox
 
         if priority_hitbox is not None:

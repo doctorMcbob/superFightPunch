@@ -50,6 +50,33 @@ STATELIST = [
     "HITLAG",
 ]
 
+def make_migrations(G):
+    for identifier in FRAME_DATA:
+        log(G, "migrating state {}".format(identifier))
+        old_hitboxes = FRAME_DATA[identifier]["HITBOXES"]
+        new_hitboxes = []
+        for hitbox in old_hitboxes:
+            found = False
+            for new in new_hitboxes:
+                match = True
+                for key in hitbox:
+                    if key == "RECT": continue
+                    if key not in new or new[key] != hitbox[key]:
+                        match = False
+                        break
+                if not match:
+                    continue
+                else:
+                    new["RECTS"].append(hitbox["RECT"])
+                    found = True
+                    break
+            if not found:
+                new = deepcopy(hitbox)
+                new["RECTS"] = [new.pop("RECT")]
+                new_hitboxes.append(new)
+        FRAME_DATA[identifier]["HITBOXES"] = new_hitboxes
+
+
 ALPHABET_KEY_MAP = {
     K_a: "a", K_b: "b", K_c: "c", K_d: "d", K_e: "e",
     K_f: "f", K_g: "g", K_h: "h", K_i: "i", K_j: "j",
@@ -433,6 +460,7 @@ def run(G):
     FRAME_DATA = load_moves(G["FIGHTER"])
     log(G, "Loaded Fighter {}".format(G["CHARACTER"]))
 
+    # make_migrations(G)
     while True:
         draw(G)
         pygame.display.update()
