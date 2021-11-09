@@ -437,6 +437,25 @@ def delete_box(G):
     SAVED = False
     return "removed box".format()
 
+def new_hitbox(G):
+    global SAVED
+    hitbox_type = select_from_list(G, ["ADD TO", "NEW"], (G["SCREEN"].get_width() - 256, 0))
+    if hitbox_type == "NEW":
+        hitbox = deepcopy(BASE_HITBOX)
+    else:
+        hitbox = pick_hitbox(G, FIGHTER.hitbox_data)
+    rect = input_rect(G)
+    if not rect: return
+    pos, dim = rect
+    hitbox["RECTS"].append(rect)
+    FIGHTER.hitboxes.append(Rect(pos, dim))
+    if hitbox_type == "NEW":
+#        FIGHTER.hitbox_data.append(hitbox)
+        FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"].append(hitbox)
+    log(G, "  {}".format((pos, dim)))
+    log(G, "Added new HITBOX")
+    SAVED = False
+
 def draw(G):
     G["SCREEN"].fill((200, 200, 250))
     if FIGHTER is not None:
@@ -521,17 +540,7 @@ def run(G):
             SAVED = False
         
         if inp == K_h and mods & KMOD_SHIFT:
-            rect = input_rect(G)
-            if not rect: continue
-            pos, dim = rect
-            hitbox = deepcopy(BASE_HITBOX)
-            hitbox["RECT"] = (pos, dim)
-            FIGHTER.hitboxes.append(Rect(pos, dim))
-            FIGHTER.hitbox_data.append(hitbox)
-            FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"].append(hitbox)
-            log(G, "  {}".format((pos, dim)))
-            log(G, "Added new HITBOX")
-            SAVED = False
+            new_hitbox(G)
 
         if inp == K_n and mods & KMOD_SHIFT:
             identifier = "{}:{}".format(STATE, FRAME)
@@ -565,13 +574,13 @@ def run(G):
             log(G, "Loaded Fighter {}".format(G["CHARACTER"]))
 
         if inp == K_RIGHT:
-            if mods & KMOD_CTRL:
+            if mods & KMOD_CTRL or mods & KMOD_SHIFT:
                 SCRLX += 16
             else:
                 FRAME += 1
 
         if inp == K_LEFT:
-            if mods & KMOD_CTRL:
+            if mods & KMOD_CTRL or mods & KMOD_SHIFT:
                 SCRLX -= 16                
             else:
                 FRAME = max(0, FRAME - 1)
