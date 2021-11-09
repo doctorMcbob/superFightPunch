@@ -366,6 +366,17 @@ def draw_boxes(G):
     for hurtbox in FIGHTER.hurtboxes:
         draw_box(G, G["SCREEN"], hurtbox, COLHRT)
 
+def pick_hitbox(G, hitboxes):
+    draw(G)
+    def show_which(G, idx):
+        y = 32
+        for i, hitbox in enumerate(FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"]):
+            bgc = (0, 100, 0) if idx == i else (100, 0, 0)
+            draw_hitbox_icon(G, (G["SCREEN"].get_width() - 256, y), hitbox, name=i, bgc=bgc)
+            y += 128
+    G["SCREEN"].blit(G["HEL32"].render("PICK BOX", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
+    return select_from_list(G, hitboxes, (G["SCREEN"].get_width() - 256, 0), cb=show_which)
+
 def pick_box(G, boxes):
     draw(G)
     def show_which(G, idx):
@@ -375,9 +386,9 @@ def pick_box(G, boxes):
     G["SCREEN"].blit(G["HEL32"].render("PICK BOX", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
     return select_from_list(G, boxes, (G["SCREEN"].get_width() - 256, 0), cb=show_which)
 
-def draw_hitbox_icon(G, pos, data, name=""):
+def draw_hitbox_icon(G, pos, data, name="", bgc=(100, 0, 0)):
     surf = Surface((256, 128))
-    surf.fill((100, 0, 0))
+    surf.fill(bgc)
     pygame.draw.rect(surf, (255, 100, 100), Rect((16, 16), (256 - 32, 128 - 32)))
     x, y = 16, 32
     keys_to_draw = ["PRIO", "STRENGTH", "HITSTUN", "HITLAG"]
@@ -392,9 +403,9 @@ def draw_hitbox_icon(G, pos, data, name=""):
     G["SCREEN"].blit(surf, pos)
 
 def update_hitbox(G):
-    boxes = FIGHTER.hitboxes
+    boxes = FIGHTER.hitbox_data
     if not boxes: return "No hitboxes"
-    box = pick_box(G, boxes)
+    box = pick_hitbox(G, boxes)
     if not box: return "No box selected"
     data = deepcopy(FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"][boxes.index(box)])
     update_dict(G, data, (0, 0))
@@ -402,7 +413,7 @@ def update_hitbox(G):
         return "No changes"
     FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"][boxes.index(box)] = data
     SAVED = False
-    return "Updated hitbox at {}".format((box.x, box.y))
+    return "Updated hitbox id {}".format(boxes.index(data))
 
 def delete_box(G):
     global SAVED, FIGHTER
@@ -417,15 +428,14 @@ def delete_box(G):
         boxes = FIGHTER.hurtboxes
     if not boxes:
         return "no boxes deleted"
-    box = pick_box(G, boxes)
     if box_type == "HITBOXES":
-        idx = boxes.index(box)
-        FRAME_DATA[FIGHTER._get_move_identifier()][box_type].pop(idx)
+        box = pick_hitbox(G, FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"])
+        FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"].pop(FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"].index(box))
     else:
+        box = pick_box(G, boxes)
         FRAME_DATA[FIGHTER._get_move_identifier()][box_type].remove(((box.x, box.y), (box.w, box.h)))
-    boxes.remove(box)
     SAVED = False
-    return "removed box at {}".format((box.x, box.y))
+    return "removed box".format()
 
 def draw(G):
     G["SCREEN"].fill((200, 200, 250))
