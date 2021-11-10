@@ -33,6 +33,12 @@ fighter_map = {
             "HITLAG": ((1920, 0), (192, 192)),
             "HITSTUN" :((2112, 0), (192, 192)),
             "HITLAND": ((2304, 0), (192, 192)),
+            "ARIALATK0:1": ((2496, 0), (192, 192)),
+            "ARIALATK0:4": ((2688, 0), (192, 192)),
+            "ARIALATK0:8": ((2880, 0), (192, 192)),
+            "ARIALATK0:12": ((3072, 0), (192, 192)),
+            "ARIALATK0:14": ((3264, 0), (192, 192)),
+            "ARIALATK0:18": ((3456, 0), (192, 192)),
         },
         "SSFILENAME": "swordie.png",
         "MSFILENAME": "swordie"
@@ -353,9 +359,11 @@ class Fighter(object):
             if self.landing_lag == 0:
                 self.state = "STAND"
             self.landing_lag -= 1
-        # DEFAULT BACK TO STAND
+        # DEFAULT BACK TO STAND OR ARIAL
         elif "STAND" in move_data["ACTIONABLE"]:
             self.state = "STAND"
+        elif "ARIAL" in move_data["ACTIONABLE"]:
+            self.state = "ARIAL"
 
         if state != self.state:
             self.frame = 0
@@ -427,7 +435,7 @@ class Fighter(object):
         else:
             self.dash = None
 
-        if self.state == "ARIAL":
+        if self.state in ["ARIAL", "ARIALATK0", "ARIALATK1"]:
             self.Y_VEL += self.grav
 
         if self.state not in ["ARIAL", "ARIALATK0", "ARIALATK1"] and not self._on_land(G):

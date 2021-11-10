@@ -120,4 +120,6 @@ def expect_input(expectlist=[]):
                 else: return e.key
 
 def shift_angle(angle, shift):
-    return angle
+    deg = angle_from_pos(angle)
+    deg += shift
+    return pos_from_angle(deg)
