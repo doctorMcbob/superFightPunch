@@ -1,11 +1,11 @@
 from copy import deepcopy
-from math import cos, sin, atan, radians, degrees
 
 import pygame
 from pygame import Surface, Rect
 from pygame.locals import *
 
 from src.fighter import Fighter, fighter_map
+from src.utils import expect_input, get_text_input, expect_click, pick_angle, get_angle, visualized_angle, pos_from_angle, select_from_list
 
 # COLORS
 COLECB = (0, 0, 255)
@@ -53,53 +53,17 @@ STATELIST = [
 def make_migrations(G):
     for identifier in FRAME_DATA:
         log(G, "migrating state {}".format(identifier))
-        old_hitboxes = FRAME_DATA[identifier]["HITBOXES"]
-        new_hitboxes = []
-        for hitbox in old_hitboxes:
-            found = False
-            for new in new_hitboxes:
-                match = True
-                for key in hitbox:
-                    if key == "RECT": continue
-                    if key not in new or new[key] != hitbox[key]:
-                        match = False
-                        break
-                if not match:
-                    continue
-                else:
-                    new["RECTS"].append(hitbox["RECT"])
-                    found = True
-                    break
-            if not found:
-                new = deepcopy(hitbox)
-                new["RECTS"] = [new.pop("RECT")]
-                new_hitboxes.append(new)
-        FRAME_DATA[identifier]["HITBOXES"] = new_hitboxes
-
-
-ALPHABET_KEY_MAP = {
-    K_a: "a", K_b: "b", K_c: "c", K_d: "d", K_e: "e",
-    K_f: "f", K_g: "g", K_h: "h", K_i: "i", K_j: "j",
-    K_k: "k", K_l: "l", K_m: "m", K_n: "n", K_o: "o",
-    K_p: "p", K_q: "q", K_r: "r", K_s: "s", K_t: "t",
-    K_u: "u", K_v: "v", K_w: "w", K_x: "x", K_y: "y",
-    K_z: "z", K_SPACE: " ", K_UNDERSCORE: "_",
-    K_0: "0", K_1: "1", K_2: "2", K_3: "3", K_4: "4",
-    K_5: "5", K_6: "6", K_7: "7", K_8: "8", K_9: "9",
-    K_PLUS: "+", K_MINUS: "-", K_COLON: ":", K_PERIOD:".",
-    K_LEFTPAREN: "(", K_RIGHTPAREN: ")", K_COMMA: ",",
-    K_ASTERISK: "*", K_SLASH: "/"
-}
-ALPHABET_SHIFT_MAP = {
-    K_0: ")", K_1: "!", K_2: "@", K_3: "#", K_4: "$",
-    K_5: "%", K_6: "^", K_7: "&", K_8: "*", K_9: "(",
-}
+        hitboxes = FRAME_DATA[identifier]["HITBOXES"]
+        for hitbox in hitboxes:
+            if "DI" not in hitbox:
+                hitbox["DI"] = 20
 
 BASE_HITBOX = {
     "PRIO"       : 100,
     "HITSTUN"    : 0,
     "HITLAG"     : 0,
     "ANGLE"      : (0, 1),
+    "DI"         : 20,
     "STRENGTH"   : 2,
     "RECTS"       : [],
 }
@@ -147,26 +111,6 @@ def log(G, text):
     new.blit(G["HEL16"].render(text, 0, (0, 0, 0)), (0, 0))
     LOG = new
 
-def expect_input(expectlist=[]):
-    while True:
-        pygame.display.update()
-        for e in pygame.event.get():
-            if e.type == QUIT and SAVED: quit()
-            if e.type == KEYDOWN:
-                if expectlist:
-                    if e.key in expectlist: return e.key
-                else: return e.key
-
-def expect_click(G, cb=lambda *args: None):
-    while True:
-        cb(G)
-        pygame.display.update()
-        for e in pygame.event.get():
-            if e.type == QUIT and SAVED: quit()
-            if e.type == KEYDOWN and e.key == K_ESCAPE: return None, None
-            if e.type == MOUSEBUTTONDOWN:
-                return e.pos, e.button
-
 def draw_grid(G):
     x, y = -1, -1
     while x <= FIGHTER.W * 4:
@@ -175,80 +119,6 @@ def draw_grid(G):
     while y <= FIGHTER.H * 4:
         pygame.draw.line(G["SCREEN"], (30, 130, 30), scroll((y, 0)), scroll((y, FIGHTER.W * 4)))
         y += 4
-
-def pick_angle(G, pos):
-    deg = [0]
-    def drangle(G):
-        pos1 = pos[0] + 64, pos[1] + 64
-        pos2 = pygame.mouse.get_pos()
-        deg[0] = get_angle(pos1, pos2)
-        G["SCREEN"].blit(visualized_angle(deg[0]), pos)
-    pos, btn = expect_click(G, cb=drangle)
-    return pos_from_angle(deg[0]) if pos else pos
-
-def get_angle(pos1, pos2):
-    x1, y1 = pos1
-    x2, y2 = pos2
-    if x1 == x2: return 90 if y1 < y2 else 270
-    if y1 == y2: return 0
-    a = y1 - y2
-    b = x1 - x2
-
-    deg = degrees(atan(a / b)) + (180 * (b > 0))
-    if deg < 0: deg += 360
-    return deg
-
-def visualized_angle(deg):
-    x, y = pos_from_angle(deg)
-    surf = Surface((128, 128))
-    surf.fill((255, 255, 255))
-    pygame.draw.circle(surf, (0, 0, 0), (64, 64), 64, width=4)
-    pygame.draw.line(surf, (255, 0, 0), (64, 64), (64+64*x, 64+64*y), width=4)
-    return surf
-
-def pos_from_angle(deg):
-    deg = radians(deg)
-    return cos(deg), sin(deg)
-
-def select_from_list(G, list, pos, cb=lambda *args: None):
-    idx = 0
-    while True:
-        surf = Surface((256, 32*len(list)))
-        surf.fill((230, 230, 230))
-        cb(G, idx)
-        for i, text in enumerate(list):
-            col = (0, 0, 0) if i != idx else (160, 110, 190)
-            surf.blit(G["HEL32"].render(str(text), 0, col), (0, i*32))
-        G["SCREEN"].blit(surf, pos)
-        inp = expect_input()
-
-        if inp == K_UP: idx -= 1
-        if inp == K_DOWN: idx += 1
-        if inp in [K_RETURN, K_SPACE]: return list[idx]
-        if inp in [K_ESCAPE, K_BACKSPACE] or not list: return False
-        idx %= len(list)
-
-def get_text_input(G, pos):
-    string = ''
-    while True:
-        surf = Surface((256, 32))
-        surf.fill((230, 230, 230))
-        surf.blit(G["HEL32"].render(string, 0, (0, 0, 0)), (0, 0))
-        G["SCREEN"].blit(surf, pos)
-        pygame.display.update()
-
-        inp = expect_input()
-        if inp == K_ESCAPE: return False
-        if inp == K_BACKSPACE: string = string[:-1]
-        if inp == K_RETURN: return string
-        
-        if pygame.key.get_mods() & KMOD_SHIFT:
-            if inp in ALPHABET_SHIFT_MAP:
-                string = string + ALPHABET_SHIFT_MAP[inp]
-            elif inp in ALPHABET_KEY_MAP:
-                string = string + ALPHABET_KEY_MAP[inp].upper()
-        elif inp in ALPHABET_KEY_MAP:
-            string = string + ALPHABET_KEY_MAP[inp]
 
 def update_dict(G, data, pos):
     surf = Surface((640, 480))
@@ -303,7 +173,7 @@ def update_dict(G, data, pos):
             try:
                 data[key] = eval(text)
             except Exception as e:
-                surf.blit(G["HEL32"].render("[ENTER] {}".format(repr(e)), 0, (150, 0, 0)), (32, 0))
+                surf.blit(G["HEL16"].render("[ENTER] {}".format(repr(e)), 0, (150, 0, 0)), (32, 16))
                 G["SCREEN"].blit(surf, pos)
                 expect_input([K_RETURN])
 
@@ -391,7 +261,7 @@ def draw_hitbox_icon(G, pos, data, name="", bgc=(100, 0, 0)):
     surf.fill(bgc)
     pygame.draw.rect(surf, (255, 100, 100), Rect((16, 16), (256 - 32, 128 - 32)))
     x, y = 16, 32
-    keys_to_draw = ["PRIO", "STRENGTH", "HITSTUN", "HITLAG"]
+    keys_to_draw = ["PRIO", "STRENGTH", "HITSTUN", "HITLAG", "DI"]
     surf.blit(G["HEL16"].render("{}".format(name), (120, 80, 80), 0), (16, 16))
     for key in keys_to_draw:
         surf.blit(G["HEL16"].render("{}:{}".format(key, data[key]), (120, 80, 80), 0), (x, y))
@@ -493,7 +363,7 @@ def run(G):
     FRAME_DATA = load_moves(G["FIGHTER"])
     log(G, "Loaded Fighter {}".format(G["CHARACTER"]))
 
-    # make_migrations(G)
+    make_migrations(G)
     while True:
         draw(G)
         pygame.display.update()
@@ -585,8 +455,8 @@ def run(G):
             else:
                 FRAME = max(0, FRAME - 1)
 
-        if inp == K_UP and mods & KMOD_CTRL:
+        if inp == K_UP and (mods & KMOD_CTRL or mods & KMOD_SHIFT):
             SCRLY -= 16
 
-        if inp == K_DOWN and mods & KMOD_CTRL:
+        if inp == K_DOWN and (mods & KMOD_CTRL or mods & KMOD_SHIFT):
             SCRLY += 16

@@ -2,6 +2,7 @@ from os import environb
 import pygame
 from pygame import Surface, Rect
 
+from src.utils import shift_angle
 from src.sprites import load_spritesheet
 
 HEL16 = pygame.font.SysFont("Helvetica", 16)
@@ -122,6 +123,9 @@ class Fighter(object):
         self.Y = 0
         self.X_VEL = 0
         self.Y_VEL = 0
+        self.X_DI = 0
+        self.Y_DI = 0
+        self.DI_cap = 0
 
         self.strikelag = 0
         self.hitlag = 0
@@ -211,7 +215,6 @@ class Fighter(object):
                 ecb = self.flip_rect(ecb)
             self.ECB.append(Rect(ecb[0][0] + self.X, ecb[0][1] + self.Y, ecb[1][0], ecb[1][1]))
 
-
     def check_collision(self, enemy):
         priority_hitbox = None
         for hurtbox in self.hurtboxes:
@@ -225,6 +228,7 @@ class Fighter(object):
             self.knockback_angle = priority_hitbox["ANGLE"][0] * enemy.direction, priority_hitbox["ANGLE"][1]
             self.knockback_strength = priority_hitbox["STRENGTH"]
             enemy.strikelag = priority_hitbox["HITLAG"]
+            self.DI_cap = priority_hitbox["DI"]
 
     def _check_floor(self, floor):
         lowest = None
@@ -242,6 +246,13 @@ class Fighter(object):
                     if plat.colliderect(ecbox):
                         return True, plat.top
         return False
+    
+    def update_DI(self):
+        x, y = self._dir_as_tuple()
+        if abs(self.X_DI + 0.1 * x) < 1:
+            self.X_DI += 0.1 * x
+        if abs(self.Y_DI + 0.1 * y) < 1:
+            self.Y_DI += 0.1 * y
     
     def ecb_collision(self, G):
         move_data = self.get_move_data()
@@ -369,8 +380,9 @@ class Fighter(object):
             self.hitstun -= 1
             if self.frame == 0:
                 if self.state == "HITSTUN":
-                    self.X_VEL = self.knockback_strength * self.knockback_angle[0] * (self.combo + 1)
-                    self.Y_VEL = 0 - self.knockback_strength * self.knockback_angle[1] * (self.combo + 1)
+                    kbangle = shift_angle(self.knockback_angle, self.DI_cap * ((self.X_DI + self.Y_DI)/2))
+                    self.X_VEL = self.knockback_strength * kbangle[0] * (self.combo + 1)
+                    self.Y_VEL = 0 - self.knockback_strength * kbangle[1] * (self.combo + 1)
             if self.state == "HITSTUN":
                 self.Y_VEL += self.grav
             else:
@@ -443,9 +455,10 @@ class Fighter(object):
             self.Y += self.Y_VEL
             self.X = int(self.X)
             self.Y = int(self.Y)
-
             self.update_boxes()
             self.frame = min(self.frame + 1, 500)
+        else:
+            self.update_DI()
 
     def DEBUG(self, G):
         x = 0 if G["P1"]["ACTIVE"] is self else 512
