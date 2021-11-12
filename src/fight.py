@@ -86,11 +86,11 @@ def center_fighters(G):
 def update_characters(G):
     center = False
     for p in ["P1", "P2"]:
-        if ("ACTIVE" not in G[p]) or (G[p]["CHARACTERS"] and G[p]["ACTIVE"].state == "DEAD"):
+        if "ACTIVE" not in G[p] or G[p]["ACTIVE"].state == "DEAD":
+            if len(G[p]["CHARACTERS"]) == 0:
+                return False
             load_character(G, p)
             center = True
-        if len(G[p]["CHARACTERS"]) == 0:
-            return False
     if center: center_fighters(G)
     return True
 
@@ -121,5 +121,5 @@ def run(G, stage="airplane"):
         pygame.display.update()
 
         G["CONTROLLER"].update()
-    G["INMENU"]
+    G["INMENU"] = True
 
