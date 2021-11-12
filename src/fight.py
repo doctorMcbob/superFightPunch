@@ -11,6 +11,13 @@ SCROLX, SCROLY = 0, 0
 METER_IN_COLOR = [(110, 120, 200), (110, 200, 120), (110, 200, 200), (250,  80,  80)]
 METER_OU_COLOR = [( 80,  80, 140), ( 80, 140,  80), ( 80, 140, 140), (180,  20,  20)]
 
+def load_character(G, p):
+    G[p]["ACTIVE"] = Fighter(fighter_map[G[p]["CHARACTERS"].pop(0)])
+    if G[p]["JOY"]:
+        G["CONTROLLER"].add_player(G[p]["ACTIVE"], DEFAULT_KEY_MAP["JOY"], joystick=G[p]["JOY"])
+    else:
+        G["CONTROLLER"].add_player(G[p]["ACTIVE"], DEFAULT_KEY_MAP[p])
+
 def percentage(part, whole): return float(part)/float(whole)
 
 def update_scroller(G):
@@ -68,22 +75,7 @@ def draw_stage(dest, stage):
         pygame.draw.rect(dest, (80, 80, 80), scroll(rect))
     pygame.draw.rect(dest, (80, 80, 80), scroll(Rect((0, stage["HEIGHT"]), (stage["WIDTH"], 4))))
 
-def run(G, stage="airplane"):
-    # re do all this once the moving pieces are finished
-    # ie: fighters and stages
-    G["CONTROLLER"] = ControllerHandler()
-    G["SCROLL"] = scroll
-    get_stage(G, stage)
-    # Remove this once loading characters is written
-    G["P1"]["ACTIVE"] = Fighter(fighter_map[G["P1"]["CHARACTERS"].pop(0)])
-    G["P2"]["ACTIVE"] = Fighter(fighter_map[G["P2"]["CHARACTERS"].pop(0)])
-    
-    for P in ["P1", "P2"]:
-        if G[P]["JOY"]:
-            G["CONTROLLER"].add_player(G[P]["ACTIVE"], DEFAULT_KEY_MAP["JOY"], joystick=G[P]["JOY"])
-            continue
-        G["CONTROLLER"].add_player(G[P]["ACTIVE"], DEFAULT_KEY_MAP[P])
-    
+def center_fighters(G):
     G["P1"]["ACTIVE"].X = G["STAGE"]["WIDTH"] // 2 - 256
     G["P1"]["ACTIVE"].Y = G["STAGE"]["HEIGHT"]- G["P1"]["ACTIVE"].H
 
@@ -91,7 +83,25 @@ def run(G, stage="airplane"):
     G["P2"]["ACTIVE"].Y = G["STAGE"]["HEIGHT"]- G["P2"]["ACTIVE"].H
     G["P2"]["ACTIVE"].direction = -1
 
-    while True:
+def update_characters(G):
+    center = False
+    for p in ["P1", "P2"]:
+        if ("ACTIVE" not in G[p]) or (G[p]["CHARACTERS"] and G[p]["ACTIVE"].state == "DEAD"):
+            load_character(G, p)
+            center = True
+        if len(G[p]["CHARACTERS"]) == 0:
+            return False
+    if center: center_fighters(G)
+    return True
+
+def run(G, stage="airplane"):
+    # re do all this once the moving pieces are finished
+    # ie: fighters and stages
+    G["CONTROLLER"] = ControllerHandler()
+    G["SCROLL"] = scroll
+    get_stage(G, stage)
+
+    while update_characters(G):
         G["CLOCK"].tick(G["FPS"])
         update_scroller(G)
         G["SCREEN"].fill((200, 200, 250))
@@ -111,4 +121,5 @@ def run(G, stage="airplane"):
         pygame.display.update()
 
         G["CONTROLLER"].update()
+    G["INMENU"]
 

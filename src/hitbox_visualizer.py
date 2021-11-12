@@ -57,6 +57,8 @@ def make_migrations(G):
         for hitbox in hitboxes:
             if "DI" not in hitbox:
                 hitbox["DI"] = 20
+            if "DMG" not in hitbox:
+                hitbox["DMG"] = 2
 
 BASE_HITBOX = {
     "PRIO"       : 100,
@@ -352,7 +354,7 @@ def draw(G):
     if G["REPLAYS"]:
         G["PRINTER"].save_surface(G["SCREEN"])
 
-def run(G):
+def run(G, migrations=False):
     global FRAME_DATA, SHOW_LOG, FIGHTER, STATE, FRAME, SAVED, SCRLX, SCRLY
     
     while "CHARACTER" not in G or not G["CHARACTER"]:
@@ -363,7 +365,9 @@ def run(G):
     FRAME_DATA = load_moves(G["FIGHTER"])
     log(G, "Loaded Fighter {}".format(G["CHARACTER"]))
 
-    make_migrations(G)
+    if migrations:
+        make_migrations(G)
+
     while True:
         draw(G)
         pygame.display.update()

@@ -17,6 +17,9 @@ def set_up(vis=False):
     G = {}
     if vis:
         W, H = 1200, 1000
+    else:
+        W = W if "-w" not in sys.argv else int(sys.argv[sys.argv.index("-w") + 1])
+        H = H if "-h" not in sys.argv else int(sys.argv[sys.argv.index("-h") + 1])
     if "-f" in sys.argv:
         G["SCREEN"] = pygame.display.set_mode((W, H), FULLSCREEN)
     else:

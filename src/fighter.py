@@ -13,12 +13,12 @@ fighter_map = {
         "W": 192,
         "H": 192,
         "WALKSPEED": 4,
-        "DASHSPEED": 8,
+        "DASHSPEED": 6,
         "JUMPSTRENGTH": -16,
         "BASELANDINGLAG": 3,
-        "DOUBLEJUMPSTRENGTH": 16,
-        "GRAV": 0.6,
-        "TRACTION": 0.9,
+        "DOUBLEJUMPSTRENGTH": 10,
+        "GRAV": 0.7,
+        "TRACTION": 0.83,
         "SPRITESHEET": {
             "STAND": ((0, 0), (192, 192)),
             "DASH": ((192, 0), (192, 192)),
@@ -235,6 +235,7 @@ class Fighter(object):
             self.knockback_strength = priority_hitbox["STRENGTH"]
             enemy.strikelag = priority_hitbox["HITLAG"]
             self.DI_cap = priority_hitbox["DI"]
+            self.HP -= priority_hitbox["DMG"]
 
     def _check_floor(self, floor):
         lowest = None
@@ -365,6 +366,13 @@ class Fighter(object):
         elif "ARIAL" in move_data["ACTIONABLE"]:
             self.state = "ARIAL"
 
+        if self.state == "DYING":
+            if self.frame == 40:
+                self.state = "DEAD"
+            self.frame += 1
+        elif self.HP <= 0:
+            self.state = "DYING"
+
         if state != self.state:
             self.frame = 0
 
@@ -380,7 +388,6 @@ class Fighter(object):
             return
         if self.state == "HITLAG":
             if self.frame == 0:
-                self.HP -= self.knockback_strength
                 self.X_VEL, self.Y_VEL = 0, 0
             self.hitlag -= 1
             return
@@ -390,7 +397,7 @@ class Fighter(object):
                 if self.state == "HITSTUN":
                     kbangle = shift_angle(self.knockback_angle, self.DI_cap * ((self.X_DI + self.Y_DI)/2))
                     self.X_VEL = self.knockback_strength * kbangle[0] * (self.combo + 1)
-                    self.Y_VEL = 0 - self.knockback_strength * kbangle[1] * (self.combo + 1)
+                    self.Y_VEL = self.knockback_strength * kbangle[1] * (self.combo + 1)
             if self.state == "HITSTUN":
                 self.Y_VEL += self.grav
             else:
@@ -456,17 +463,18 @@ class Fighter(object):
         self.update_boxes()
 
         self.update_state()
-        self.apply_state(G)
+        if not self.state in ["DYING", "DEAD"]:
+            self.apply_state(G)
 
-        if not self.strikelag:
-            self.X += self.X_VEL
-            self.Y += self.Y_VEL
-            self.X = int(self.X)
-            self.Y = int(self.Y)
-            self.update_boxes()
-            self.frame = min(self.frame + 1, 500)
-        else:
-            self.update_DI()
+            if not self.strikelag:
+                self.X += self.X_VEL
+                self.Y += self.Y_VEL
+                self.X = int(self.X)
+                self.Y = int(self.Y)
+                self.update_boxes()
+                self.frame = min(self.frame + 1, 500)
+            else:
+                self.update_DI()
 
     def DEBUG(self, G):
         x = 0 if G["P1"]["ACTIVE"] is self else 512
