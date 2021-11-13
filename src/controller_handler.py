@@ -52,6 +52,15 @@ class ControllerHandler(object):
         elif self.P2 is None:
             self.P2 = controller
 
+    def update_player(self, p, obj):
+        if p == "P1" and self.P1 is not None:
+            self.P1["player"] = obj
+        elif p == "P2" and self.P2 is not None:
+            self.P2["player"] = obj
+
+    def get_exists(self, p):
+        return self.P1 is not None if p == "P1" else self.P2 is not None
+
     def update(self, SENS=0.4):
         pygame.event.pump()
         keys = pygame.key.get_pressed()

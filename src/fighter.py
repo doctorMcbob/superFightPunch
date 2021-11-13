@@ -315,6 +315,13 @@ class Fighter(object):
         move_data = self.get_move_data()
         state = self.state
 
+        if self.state == "DYING":
+            if self.frame == 40:
+                self.state = "DEAD"
+            self.frame += 1
+        elif self.HP <= 0:
+            self.state = "DYING"
+
         if self.strikelag: return
         if self.hitlag:
             self.state = "HITLAG"
@@ -365,13 +372,6 @@ class Fighter(object):
             self.state = "STAND"
         elif "ARIAL" in move_data["ACTIONABLE"]:
             self.state = "ARIAL"
-
-        if self.state == "DYING":
-            if self.frame == 40:
-                self.state = "DEAD"
-            self.frame += 1
-        elif self.HP <= 0:
-            self.state = "DYING"
 
         if state != self.state:
             self.frame = 0

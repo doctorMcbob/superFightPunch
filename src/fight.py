@@ -13,6 +13,9 @@ METER_OU_COLOR = [( 80,  80, 140), ( 80, 140,  80), ( 80, 140, 140), (180,  20, 
 
 def load_character(G, p):
     G[p]["ACTIVE"] = Fighter(fighter_map[G[p]["CHARACTERS"].pop(0)])
+    if G["CONTROLLER"].get_exists(p):
+        G["CONTROLLER"].update_player(p, G[p]["ACTIVE"])
+        return
     if G[p]["JOY"]:
         G["CONTROLLER"].add_player(G[p]["ACTIVE"], DEFAULT_KEY_MAP["JOY"], joystick=G[p]["JOY"])
     else:
@@ -95,8 +98,6 @@ def update_characters(G):
     return True
 
 def run(G, stage="airplane"):
-    # re do all this once the moving pieces are finished
-    # ie: fighters and stages
     G["CONTROLLER"] = ControllerHandler()
     G["SCROLL"] = scroll
     get_stage(G, stage)
