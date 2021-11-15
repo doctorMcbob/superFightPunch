@@ -67,7 +67,8 @@ BASE_HITBOX = {
     "ANGLE"      : (0, 1),
     "DI"         : 20,
     "STRENGTH"   : 2,
-    "RECTS"       : [],
+    "DMG"        : 2,
+    "RECTS"      : [],
 }
 
 BASE_STATE = {
@@ -274,6 +275,20 @@ def draw_hitbox_icon(G, pos, data, name="", bgc=(100, 0, 0)):
     surf.blit(visualized_angle(get_angle((0, 0), data["ANGLE"])), (128, 0))
     G["SCREEN"].blit(surf, pos)
 
+def update_actionable(G):
+    draw(G)    
+    G["SCREEN"].blit(G["HEL32"].render("UPDATE ACTIONABLE", 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 128))
+    cmd = select_from_list(G, ["ADD", "REMOVE"], (G["SCREEN"].get_width() - 256, 0))
+    states = STATELIST if cmd == "ADD" else FRAME_DATA[FIGHTER._get_move_identifier()]["ACTIONABLE"]
+    state = select_from_list(G, states, (G["SCREEN"].get_width() - 256, 0))
+    if not state: return "did not update actionable"
+    if cmd == "ADD":
+        FRAME_DATA[FIGHTER._get_move_identifier()]["ACTIONABLE"].append(state)
+        return "{} -> {}".format(FIGHTER._get_move_identifier(), state)
+    if cmd == "REMOVE":
+        FRAME_DATA[FIGHTER._get_move_identifier()]["ACTIONABLE"].remove(state)
+        return "{} -x {}".format(FIGHTER._get_move_identifier(), state)
+
 def update_hitbox(G):
     boxes = FIGHTER.hitbox_data
     if not boxes: return "No hitboxes"
@@ -339,9 +354,9 @@ def draw(G):
         G["SCREEN"].blit(G["HEL32"].render("STATE:{}".format(STATE), 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 96))
         G["SCREEN"].blit(G["HEL32"].render("FRAME:{}".format(FRAME), 0, (0, 0, 0)), (0, G["SCREEN"].get_height() - 64))
         y = 0
-        G["SCREEN"].blit(G["HEL16"].render("ACTIONABLE:", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256, y))
+        G["SCREEN"].blit(G["HEL16"].render("ACTIONABLE:", 0, (0, 0, 0)), (G["SCREEN"].get_width() - 512, y))
         y += 16
-        G["SCREEN"].blit(G["HEL16"].render("{}".format(move_data["ACTIONABLE"]), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 256 + 32, y))
+        G["SCREEN"].blit(G["HEL16"].render("{}".format(move_data["ACTIONABLE"]), 0, (0, 0, 0)), (G["SCREEN"].get_width() - 512 + 32, y))
         y += 16
         for i, hitbox in enumerate(FRAME_DATA[FIGHTER._get_move_identifier()]["HITBOXES"]):
             draw_hitbox_icon(G, (G["SCREEN"].get_width() - 256, y), hitbox, name=i)
@@ -432,6 +447,9 @@ def run(G, migrations=False):
 
         if inp == K_f and mods & KMOD_SHIFT:
             log(G, update_hitbox(G))
+
+        if inp == K_a and mods & KMOD_SHIFT:
+            log(G, update_actionable(G))
 
         if inp == K_s and mods & KMOD_CTRL:
             log(G, save_moves(FRAME_DATA))

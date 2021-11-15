@@ -327,23 +327,6 @@ class Fighter(object):
             self.state = "HITLAG"
         elif self.state != "HITLAND" and self.hitstun:
             self.state = "HITSTUN"
-        # JUMP FUNCTIONALITY
-        elif self.inp["BTN2"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
-            self.state = "JUMPSQUAT"
-        elif self.inp["BTN2"] and "DOUBLEJUMP" in move_data["ACTIONABLE"] and self.has_double_jump and self.can_double_jump:
-            self.state = "DOUBLEJUMP"
-        elif self.state == "JUMPSQUAT" and "JUMP" in move_data["ACTIONABLE"]:
-            self.state = "JUMP"
-
-        # DASH FUNCTIONALITY
-        elif self.inp["BTN3"] and self.dash is None and "DASH" in move_data["ACTIONABLE"] and (self.inp["LEFT"] != self.inp["RIGHT"]):
-                self.state = "DASH"
-        elif self.dash is not None:
-            if not self.inp["BTN3"]:
-                self.dash = None
-                self.state = "STAND"
-        elif not self.inp["BTN3"] and "WALK" in move_data["ACTIONABLE"] and (self.inp["LEFT"] or self.inp["RIGHT"]):
-                self.state = "WALK"
 
         # GROUNDED ATTACK FUNCTIONALITY
         elif self.inp["BTN0"] and "GROUNDATK0" in move_data["ACTIONABLE"]:
@@ -362,6 +345,24 @@ class Fighter(object):
             self.state = "DASHATK0"
         elif self.inp["BTN1"] and "DASHATK1" in move_data["ACTIONABLE"]:
             self.state = "DASHATK1"
+
+        # JUMP FUNCTIONALITY
+        elif self.inp["BTN2"] and "JUMPSQUAT" in move_data["ACTIONABLE"]:
+            self.state = "JUMPSQUAT"
+        elif self.inp["BTN2"] and "DOUBLEJUMP" in move_data["ACTIONABLE"] and self.has_double_jump and self.can_double_jump:
+            self.state = "DOUBLEJUMP"
+        elif self.state == "JUMPSQUAT" and "JUMP" in move_data["ACTIONABLE"]:
+            self.state = "JUMP"
+
+        # DASH FUNCTIONALITY
+        elif self.inp["BTN3"] and self.dash is None and "DASH" in move_data["ACTIONABLE"] and (self.inp["LEFT"] != self.inp["RIGHT"]):
+                self.state = "DASH"
+        elif self.dash is not None:
+            if not self.inp["BTN3"]:
+                self.dash = None
+                self.state = "STAND"
+        elif not self.inp["BTN3"] and "WALK" in move_data["ACTIONABLE"] and (self.inp["LEFT"] or self.inp["RIGHT"]):
+                self.state = "WALK"
 
         elif self.state in ["LANDING", "LANDINGLAG" , "HITLAND"]:
             if self.landing_lag == 0:
