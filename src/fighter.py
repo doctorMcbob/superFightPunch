@@ -18,6 +18,8 @@ fighter_map = {
         "BASELANDINGLAG": 3,
         "DOUBLEJUMPSTRENGTH": 10,
         "GRAV": 0.7,
+        "DRIFT": 0.8,
+        "AIRSPEED": 6,
         "TRACTION": 0.83,
         "SPRITESHEET": {
             "STAND": ((0, 0), (192, 192)),
@@ -53,6 +55,8 @@ fighter_map = {
         "BASELANDINGLAG": 3,
         "DOUBLEJUMPSTRENGTH": 16,
         "GRAV": 0.8,
+        "DRIFT": 0.8,
+        "AIRSPEED": 10,
         "TRACTION": 0.6,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
@@ -75,6 +79,8 @@ fighter_map = {
         "BASELANDINGLAG": 3,
         "DOUBLEJUMPSTRENGTH": 20,
         "GRAV": 1,
+        "DRIFT": 1,
+        "AIRSPEED": 5,
         "TRACTION": 0.8,
         "SPRITESHEET": {
             "STAND": ((0, 0), (128, 128)),
@@ -111,6 +117,8 @@ class Fighter(object):
         self.base_landing_lag = template["BASELANDINGLAG"]
 
         self.grav = template["GRAV"]
+        self.air_drift = template["DRIFT"]
+        self.air_speed = template["AIRSPEED"]
         self.traction = template["TRACTION"]
 
         self.inp = {
@@ -445,10 +453,11 @@ class Fighter(object):
 
         if self.state in ["ARIAL", "ARIALATK0", "ARIALATK1"]:
             self.Y_VEL += self.grav
+            if ((self.X_VEL > 0) != (d[0] > 0)) or (abs(self.X_VEL + self.air_drift * d[0]) <= self.air_speed):
+                self.X_VEL += self.air_drift * d[0]
 
         if self.state not in ["ARIAL", "ARIALATK0", "ARIALATK1"] and not self._on_land(G):
-            self.state = "ARIAL"
-            
+            self.state = "ARIAL"            
 
     def _on_land(self, G):
         self.ECB = [Rect(ecbox.x, ecbox.y+8, ecbox.w, ecbox.h) for ecbox in self.ECB]
