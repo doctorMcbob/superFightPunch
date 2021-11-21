@@ -54,12 +54,39 @@ def make_migrations(G):
     for identifier in FRAME_DATA:
         log(G, "migrating state {}".format(identifier))
         hitboxes = FRAME_DATA[identifier]["HITBOXES"]
-        for hitbox in hitboxes:
-            if "DI" not in hitbox:
-                hitbox["DI"] = 20
-            if "DMG" not in hitbox:
-                hitbox["DMG"] = 2
+        hurtboxes = FRAME_DATA[identifier]["HURTBOXES"]
+        ecbs = FRAME_DATA[identifier]["ECB"]
 
+        for hitbox in hitboxes:
+            new_rects =  []
+            for rect in hitbox['RECTS']:
+                pos, dim = rect
+                x, y = pos
+                new_rects.append(
+                    ((x+32, y+32) , dim)
+                )
+            hitbox['RECTS'] = new_rects
+
+        new_hurtboxes = []
+        for hurtbox in hurtboxes:
+            pos, dim = hurtbox
+            x, y = pos
+            new_hurtboxes.append(
+                ((x+32, y+32), dim)
+            )
+        FRAME_DATA[identifier]["HURTBOXES"] = new_hurtboxes
+
+        new_ecbs = []
+        for ecb in ecbs:
+            pos, dim = ecb
+            x, y = pos
+            new_ecbs.append(
+                ((x+32, y+32), dim)
+            )
+        FRAME_DATA[identifier]["ECB"] = new_ecbs
+
+        
+        
 BASE_HITBOX = {
     "PRIO"       : 100,
     "HITSTUN"    : 0,

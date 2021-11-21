@@ -10,8 +10,8 @@ HEL16 = pygame.font.SysFont("Helvetica", 16)
 fighter_map = {
     "SWORDIE": {
         "MAXHP": 100,
-        "W": 192,
-        "H": 192,
+        "W": 256,
+        "H": 224,
         "WALKSPEED": 4,
         "DASHSPEED": 6,
         "JUMPSTRENGTH": -16,
@@ -22,25 +22,31 @@ fighter_map = {
         "AIRSPEED": 6,
         "TRACTION": 0.83,
         "SPRITESHEET": {
-            "STAND": ((0, 0), (192, 192)),
-            "DASH": ((192, 0), (192, 192)),
-            "WALK": ((384, 0), (192, 192)),
-            "JUMPSQUAT": ((576, 0), (192, 192)),
-            "ARIAL": ((768, 0), (192, 192)),
-            "LANDING": ((960, 0), (192, 192)),
-            "GROUNDATK0:1": ((1152, 0), (192, 192)),
-            "GROUNDATK0:4": ((1344, 0), (192, 192)),
-            "GROUNDATK0:12": ((1536, 0), (192, 192)),
-            "GROUNDATK0:18": ((1728, 0), (192, 192)),
-            "HITLAG": ((1920, 0), (192, 192)),
-            "HITSTUN" :((2112, 0), (192, 192)),
-            "HITLAND": ((2304, 0), (192, 192)),
-            "ARIALATK0:1": ((2496, 0), (192, 192)),
-            "ARIALATK0:4": ((2688, 0), (192, 192)),
-            "ARIALATK0:8": ((2880, 0), (192, 192)),
-            "ARIALATK0:12": ((3072, 0), (192, 192)),
-            "ARIALATK0:14": ((3264, 0), (192, 192)),
-            "ARIALATK0:18": ((3456, 0), (192, 192)),
+            "STAND":         ((0, 0), (256, 256)),
+            "DASH":          ((256, 0), (256, 256)),
+            "WALK":          ((512, 0), (256, 256)),
+            "JUMPSQUAT":     ((768, 0), (256, 256)),
+            "ARIAL":         ((1024, 0), (256, 256)),
+            "LANDING":       ((1280, 0), (256, 256)),
+            "GROUNDATK0:1":  ((1536, 0), (256, 256)),
+            "GROUNDATK0:4":  ((1792, 0), (256, 256)),
+            "GROUNDATK0:12": ((2048, 0), (256, 256)),
+            "GROUNDATK0:18": ((2304, 0), (256, 256)),
+            "HITLAG":        ((2560, 0), (256, 256)),
+            "HITSTUN":       ((2816, 0), (256, 256)),
+            "HITLAND":       ((3072, 0), (256, 256)),
+            "ARIALATK0:1":   ((3328, 0), (256, 256)),
+            "ARIALATK0:4":   ((3584, 0), (256, 256)),
+            "ARIALATK0:8":   ((3840, 0), (256, 256)),
+            "ARIALATK0:12":  ((4096, 0), (256, 256)),
+            "ARIALATK0:14":  ((4352, 0), (256, 256)),
+            "ARIALATK0:18":  ((4608, 0), (256, 256)),
+            "DASHATK0:1":    ((4864, 0), (256, 256)),
+            "DASHATK0:3":    ((5120, 0), (256, 256)),
+            "DASHATK0:10":    ((5376, 0), (256, 256)),
+            "DASHATK0:13":    ((5632, 0), (256, 256)),
+            "DASHATK0:18":    ((5888, 0), (256, 256)),
+            "DASHATK0:24":    ((6144, 0), (256, 256)),
         },
         "SSFILENAME": "swordie.png",
         "MSFILENAME": "swordie"
@@ -366,7 +372,7 @@ class Fighter(object):
         elif self.inp["BTN3"] and self.dash is None and "DASH" in move_data["ACTIONABLE"] and (self.inp["LEFT"] != self.inp["RIGHT"]):
                 self.state = "DASH"
         elif self.dash is not None:
-            if not self.inp["BTN3"]:
+            if not self.inp["BTN3"] and "STAND" in move_data["ACTIONABLE"]:
                 self.dash = None
                 self.state = "STAND"
         elif not self.inp["BTN3"] and "WALK" in move_data["ACTIONABLE"] and (self.inp["LEFT"] or self.inp["RIGHT"]):
@@ -446,7 +452,7 @@ class Fighter(object):
             if not abs(self.X_VEL) > self.walk_speed:
                 self.X_VEL = self.walk_speed * d[0]
 
-        if self.state == "DASH":
+        if self.state in ["DASH", "DASHATK0", "DASHATK1"]:
             self.X_VEL = self.dash_speed * self.dash
         else:
             self.dash = None
