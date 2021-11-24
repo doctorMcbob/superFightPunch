@@ -27,10 +27,10 @@ DEFAULT_KEY_MAP = {
         "UP": 1,
         "RIGHT": 0,
         "DOWN": 1,
-        "BTN0": 0,
-        "BTN1": 1,
-        "BTN2": 2,
-        "BTN3": 3,
+        "BTN0": [0],
+        "BTN1": [3],
+        "BTN2": [2, 1],
+        "BTN3": [4, 5, 6, 7],
     },
 
 }
@@ -64,7 +64,8 @@ class ControllerHandler(object):
     def update(self, SENS=0.4):
         pygame.event.pump()
         keys = pygame.key.get_pressed()
-        if keys[self.QUITKEY] or pygame.event.peek(QUIT): quit()
+        if keys[self.QUITKEY] or pygame.event.peek(QUIT):
+            return "QUIT"
         
         for P in [self.P1, self.P2]:
             if P is None: continue
@@ -90,9 +91,9 @@ class ControllerHandler(object):
                     player.inp["RIGHT"] = joy.get_axis(P["map"]["RIGHT"]) > SENS
                     player.inp["UP"] = joy.get_axis(P["map"]["UP"]) < 0-SENS
                     player.inp["DOWN"] = joy.get_axis(P["map"]["DOWN"]) > SENS
-                
-                player.inp["BTN0"] = joy.get_button(P["map"]["BTN0"])
-                player.inp["BTN1"] = joy.get_button(P["map"]["BTN1"])
-                player.inp["BTN2"] = joy.get_button(P["map"]["BTN2"])
-                player.inp["BTN3"] = joy.get_button(P["map"]["BTN3"])
+
+                player.inp["BTN0"] = any([joy.get_button(btn) for btn in P["map"]["BTN0"]])
+                player.inp["BTN1"] = any([joy.get_button(btn) for btn in P["map"]["BTN1"]])
+                player.inp["BTN2"] = any([joy.get_button(btn) for btn in P["map"]["BTN2"]])
+                player.inp["BTN3"] = any([joy.get_button(btn) for btn in P["map"]["BTN3"]])
                 

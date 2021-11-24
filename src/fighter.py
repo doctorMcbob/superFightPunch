@@ -47,6 +47,11 @@ fighter_map = {
             "DASHATK0:13":    ((5632, 0), (256, 256)),
             "DASHATK0:18":    ((5888, 0), (256, 256)),
             "DASHATK0:24":    ((6144, 0), (256, 256)),
+            "ARIALATK1:1":    ((6400, 0), (256, 256)),
+            "ARIALATK1:8":    ((6656, 0), (256, 256)),
+            "ARIALATK1:10":    ((6912, 0), (256, 256)),
+            "ARIALATK1:14":    ((7168, 0), (256, 256)),
+
         },
         "SSFILENAME": "swordie.png",
         "MSFILENAME": "swordie"
@@ -135,7 +140,7 @@ class Fighter(object):
 
             "BTN0": 0, # ATTACK 1
             "BTN1": 0, # ATTACK 2
-            "BTN2": 0, # RUN BUTTON
+            "BTN2": 0, # JUMP BUTTON
             "BTN3": 0, # DASH BUTTON
         }
 

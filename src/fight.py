@@ -121,6 +121,11 @@ def run(G, stage="airplane"):
         if G["REPLAYS"]: G["PRINTER"].save_surface(G["SCREEN"])
         pygame.display.update()
 
-        G["CONTROLLER"].update()
+        if G["CONTROLLER"].update() == "QUIT":
+            break
+
     G["INMENU"] = True
+    if G["REPLAYS"]:
+        G["PRINTER"].save_em()
+        G["PRINTER"].make_gif()
 

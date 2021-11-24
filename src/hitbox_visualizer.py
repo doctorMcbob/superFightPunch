@@ -125,9 +125,11 @@ def drawn_fighter(G):
     global FIGHTER, FRAME, STATE
     FIGHTER.state = STATE
     FIGHTER.frame = FRAME
-    surf = Surface((FIGHTER.W * 4, FIGHTER.H * 4))
-    surf.fill((0, 100, 0))
+    
     sprite = FIGHTER.get_sprite(G)
+    w, h = sprite.get_width(), sprite.get_height()
+    surf = Surface((w * 4, h * 4))
+    surf.fill((0, 100, 0))
     for _ in range(2):
         sprite = pygame.transform.scale2x(sprite)
     surf.blit(sprite, (0, 0))
