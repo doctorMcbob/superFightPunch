@@ -125,7 +125,4 @@ def run(G, stage="airplane"):
             break
 
     G["INMENU"] = True
-    if G["REPLAYS"]:
-        G["PRINTER"].save_em()
-        G["PRINTER"].make_gif()
 

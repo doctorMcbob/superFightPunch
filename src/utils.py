@@ -99,21 +99,23 @@ def select_from_list(G, list, pos, cb=lambda *args: None):
         if inp in [K_ESCAPE, K_BACKSPACE] or not list: return False
         idx %= len(list)
 
-def expect_click(G, cb=lambda *args: None):
+def expect_click(args=None, cb=lambda *args: None):
     while True:
         cb(G)
         pygame.display.update()
         for e in pygame.event.get():
-            if e.type == QUIT and SAVED: quit()
-            if e.type == KEYDOWN and e.key == K_ESCAPE: return None, None
+            if e.type == QUIT: return None, None
+            if e.type == KEYDOWN and e.key == K_xESCAPE: return None, None
             if e.type == MOUSEBUTTONDOWN:
                 return e.pos, e.button
 
-def expect_input(expectlist=[]):
+def expect_input(expectlist=[], args=None, cb=lambda *args:None):
+    cb(args)
     while True:
         pygame.display.update()
         for e in pygame.event.get():
-            if e.type == QUIT and SAVED: quit()
+            if e.type == QUIT:
+                return None
             if e.type == KEYDOWN:
                 if expectlist:
                     if e.key in expectlist: return e.key

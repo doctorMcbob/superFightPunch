@@ -62,4 +62,5 @@ def run(G):
             G = G["MENU"].run(G)
         else:
             G["FIGHT"].run(G)
-        
+            if "PRINTER" in G:
+                G["PRINTER"].run(G)
