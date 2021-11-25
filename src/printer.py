@@ -5,6 +5,7 @@ import os
 import sys
 import imageio
 import pygame
+from pygame.locals import *
 from pathlib import Path
 
 from src.utils import expect_input
@@ -40,17 +41,27 @@ def make_gif(start, end):
 
 def draw(G):
     G["SCREEN"].blit(SAVED[FRAME], (0, 0))
-    G["SCREEN"].blit(G["HEL64"].render("{}".format(FRAME), 0, (0, 0, 0)), (32, 256))
+    G["SCREEN"].blit(G["HEL32"].render("{}".format(FRAME), 0, (0, 0, 0)), (32, 288))
+    if START:
+        pygame.draw.circle(G["SCREEN"], (255, 0, 0), (32, 256), 16)
 
 def run(G):
+    global START, FRAME
     def animate(G):
         global FRAME
         draw(G)
-        G["SCREEN"].blit(G["HEL64"].render("Save Replay? (Y/N)", 0, (0, 0, 0)), (32, 256))
+        G["SCREEN"].blit(G["HEL32"].render("Save Replay? (Y/N)", 0, (0, 0, 0)), (32, 256))
         FRAME += 1
 
-    if expect_input(args=G, cb=animate) != K_y:
+    pygame.event.pump()
+    inp = expect_input([K_y, K_n], args=G, cb=animate)
+
+    print(inp)
+    print(K_ESCAPE, K_y, K_n)
+    if inp != K_y:
         return
+
+    save_em()
 
     while True:
         draw(G)
@@ -72,3 +83,6 @@ def run(G):
 
         elif inp == K_BACKSPACE:
             START = None
+
+        elif inp == K_ESCAPE:
+            return
