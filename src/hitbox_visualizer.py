@@ -63,7 +63,7 @@ def make_migrations(G):
                 pos, dim = rect
                 x, y = pos
                 new_rects.append(
-                    ((x+32, y+32) , dim)
+                    ((x+32, y) , dim)
                 )
             hitbox['RECTS'] = new_rects
 
@@ -72,7 +72,7 @@ def make_migrations(G):
             pos, dim = hurtbox
             x, y = pos
             new_hurtboxes.append(
-                ((x+32, y+32), dim)
+                ((x+32, y), dim)
             )
         FRAME_DATA[identifier]["HURTBOXES"] = new_hurtboxes
 
@@ -81,7 +81,7 @@ def make_migrations(G):
             pos, dim = ecb
             x, y = pos
             new_ecbs.append(
-                ((x+32, y+32), dim)
+                ((x+32, y), dim)
             )
         FRAME_DATA[identifier]["ECB"] = new_ecbs
 

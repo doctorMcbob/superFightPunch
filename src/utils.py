@@ -101,11 +101,11 @@ def select_from_list(G, list, pos, cb=lambda *args: None):
 
 def expect_click(args=None, cb=lambda *args: None):
     while True:
-        cb(G)
+        cb(args)
         pygame.display.update()
         for e in pygame.event.get():
             if e.type == QUIT: return None, None
-            if e.type == KEYDOWN and e.key == K_xESCAPE: return None, None
+            if e.type == KEYDOWN and e.key == K_ESCAPE: return None, None
             if e.type == MOUSEBUTTONDOWN:
                 return e.pos, e.button
 
